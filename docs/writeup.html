@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Write-up · Beat the Grid</title>
+<meta name="description" content="The full Beat the Grid write-up: question, data, rules, method, results, failures and limits.">
+<link rel="canonical" href="https://maxliston.github.io/beat-the-grid/writeup.html">
+<meta name="theme-color" content="#1c5cab">
+<meta property="og:title" content="Write-up · Beat the Grid">
+<meta property="og:description" content="The full Beat the Grid write-up: question, data, rules, method, results, failures and limits.">
+<meta property="og:image" content="https://maxliston.github.io/beat-the-grid/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/beat-the-grid/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/beat-the-grid/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/beat-the-grid/apple-touch-icon.png">
+<link rel="preload" href="/beat-the-grid/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/beat-the-grid/style.css?v=7fb97c857f">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<nav class="topnav" aria-label="Main"><div class="wrap navrow">
+  <a class="brand" href="/beat-the-grid/"><img src="/beat-the-grid/favicon.svg" width="22" height="22" alt=""> Beat the Grid</a>
+  <div class="navlinks"><a href="/beat-the-grid/#scoreboard">Results</a><a href="/beat-the-grid/#explore">Explore</a><a href="/beat-the-grid/writeup.html">Write-up</a><a class="navcta" href="/beat-the-grid/#contact">Contact</a></div>
+  <button id="themeBtn" class="ghost" aria-label="Switch between light and dark theme">Theme</button>
+</div></nav>
+<main class="page" id="main"><div class="wrap">
+<p class="cta-row" style="margin:0 0 24px"><a class="btn small" href="/beat-the-grid/beat-the-grid-writeup.pdf" download>Download PDF</a><a class="secondary" href="/beat-the-grid/">Back to the live results</a></p>
+<h1>Beat the Grid: Project Write-up</h1>
+<p><em>Maxwell Liston · University of Washington, B.S. Informatics (Data Science) · November 2026</em></p>
+<h2>The question</h2>
+<p>Every US balancing authority publishes a day-ahead forecast of hourly electricity demand. Those forecasts decide how many power plants are scheduled, so errors cost real money. <strong>Can one open model, built only from public data, match or beat them, under rules that keep the comparison fair?</strong></p>
+<h2>Data</h2>
+<ul>
+<li><strong>Demand and official forecasts:</strong> EIA-930 (Hourly Electric Grid Monitor), 2022–2026, every balancing authority. That's about 2.6 million region-hours.</li>
+<li><strong>Weather:</strong> archived <em>forecasts</em> (not observations), made ≥ 48 hours ahead, from the Open-Meteo previous-runs API. They come from up to three large cities per region and are population-weighted: 78 locations in total.</li>
+<li><strong>Prices:</strong> EIA wholesale market data (ICE), 2026 on-peak hub prices. These are used only for the dollar illustration.</li>
+</ul>
+<h2>The rules</h2>
+<ol>
+<li>Each forecast covers one local day and is issued at 12:00 UTC the day before. It may use demand data only up to 06:00 UTC that morning. A test scrambles every later value and checks that the model's inputs don't change.</li>
+<li>Weather inputs are forecasts that existed before the issue time. I considered fresher "one day ahead" archived forecasts and <strong>rejected</strong> them, because for most target hours they come from model runs published after the issue time.</li>
+<li>Regions were selected on data coverage alone: 34 regions (≥ 1,500 MW, ≥ 90% coverage).</li>
+<li>Regions whose official forecast has a median error above 10% (FPC, PSCO, PSEI) are excluded from the headline. Their "forecast" doesn't match their reported demand. This rule was set before scoring.</li>
+<li>Hours where either forecast is off by more than 50% are treated as data glitches and dropped <strong>for both sides</strong> (0.9% of hours).</li>
+</ol>
+<h2>Method</h2>
+<ul>
+<li><strong>Model:</strong> one global LightGBM model. It predicts demand as a ratio to the past week's mean, so a 1.6 GW utility and the 97 GW PJM learn from each other. Settings were tuned on April–June 2024, a window that is never scored.</li>
+<li><strong>Uncertainty:</strong> an 80% interval from quantile models, calibrated per region with conformalized quantile regression on a held-out recent window.</li>
+<li><strong>Backtest:</strong> walk-forward with quarterly retraining, July 2024 → November 2026. That's 696,190 scored region-hours, all out of sample.</li>
+<li><strong>Significance:</strong> a Diebold-Mariano test on daily errors (Newey-West variance, small-sample correction), with Holm correction across regions.</li>
+</ul>
+<h2>Results</h2>
+<table>
+<thead>
+<tr>
+<th>Contest</th>
+<th>Regions</th>
+<th>Wins</th>
+<th>Losses</th>
+<th>Ties</th>
+<th>My error</th>
+<th>Official</th>
+<th>Blend</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Main contest</td>
+<td>31 (97% of demand)</td>
+<td>12</td>
+<td>14</td>
+<td>5</td>
+<td><strong>3.08%</strong></td>
+<td>3.68%</td>
+<td><strong>2.45%</strong></td>
+</tr>
+<tr>
+<td>Strict check (official median error ≤ 5%)</td>
+<td>25 (86%)</td>
+<td>6</td>
+<td>14</td>
+<td>5</td>
+<td><strong>3.05%</strong></td>
+<td>3.20%</td>
+<td><strong>2.32%</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>Errors are load-weighted mean absolute percentage error per hour.</em></p>
+<ul>
+<li><strong>No clean sweep.</strong> The operators win more regions. Southern Company (1.4% error) and ISO New England are excellent.</li>
+<li><strong>My model wins where it matters most by size.</strong> It beats <strong>PJM</strong>, the largest US grid (2.69% vs 3.51%), and California (3.17% vs 8.12%), so its demand-weighted error is lower.</li>
+<li><strong>When each side is stronger.</strong> On genuine official forecasts, my model is better overnight and in the morning. The operators are better at the late-afternoon peak and on the busiest 5% of days, when their real-time information matters most.</li>
+<li><strong>The 80% interval is well calibrated:</strong> it contains the actual value 79.5% of the time.</li>
+</ul>
+<h2>The peak contest</h2>
+<p>Operators care most about each day's highest hour, because that's when the most expensive plants run. Scored the same way (Diebold-Mariano with Holm correction, 26,495 region-days), <strong>the operators win clearly: 19 losses, 10 wins, 2 ties for my model.</strong> Their demand-weighted peak error is 2.87% vs my 3.26%, and they place the peak within an hour of the real one on 85% of days vs my 79%. Even in PJM, where my model wins on hourly error, the operator calls the peak better (1.8% vs 2.9%).</p>
+<p>I tried a separate model trained only to predict each day's peak (walk-forward, tuned on the never-scored window). It was <em>worse</em> than taking the highest hour of the hourly forecast (3.60% vs 3.26%), so it wasn't adopted. The blend still helps at the peak: 2.40% error, better than the official forecast in 22 of 31 regions.</p>
+<h2>The most useful finding: better together</h2>
+<p>The two forecasts make different mistakes. A blend weighted per region and time of day, learned only from earlier quarters, cuts the operators' error from <strong>3.68% to 2.45% (−33%)</strong> and beats the official forecast in <strong>28 of 31</strong> regions (22 of 25 in the strict set). The learned weights are interpretable. California should trust my model 85–100%, PJM about 80% at night but 40% in the afternoon, and Southern Company only 10–20%.</p>
+<p><strong>Scale:</strong> annualised, the official forecasts mis-forecast ~151 TWh of electricity versus ~102 TWh blended. At 2026 wholesale prices that's roughly $9.2B vs $6.4B of energy value. This is an illustration of scale only: the real cost of forecast error is a fraction of the energy's value.</p>
+<h2>Where it fails</h2>
+<p>Three of the model's ten worst days were <strong>Hurricanes Milton and Helene</strong> (October and September 2024). The weather forecasts were accurate, but millions of customers lost power, so demand collapsed. The operators knew about the outages, and a weather-driven model can't. Other misses point to reporting problems in the demand data.</p>
+<p><strong>Experiment: storm warnings.</strong> I added two inputs from archived National Weather Service warnings (hurricane, tropical storm, storm surge, extreme wind, ice storm): the population-weighted share of a region's cities under a warning at issue time, and the share where one ended in the previous 72 hours. Only warnings already in effect at the issue time count. In the same walk-forward backtest, error on the ~5,100 storm hours fell from 8.3% to 7.9% and hurricane days improved by 13–35% (Dominion SC on Helene: 30.9% → 20.2%), with ordinary days unchanged. <strong>Not adopted yet:</strong> the idea came from looking at the test period's worst days, so the gain is partly hindsight. It needs new storms to confirm it.</p>
+<h2>What I tried that didn't work</h2>
+<ul>
+<li><strong>A dedicated daily-peak model:</strong> less accurate than the peak of the hourly forecast (3.60% vs 3.26%), so not adopted.</li>
+<li><strong>More weather cities (3 → 5 per region):</strong> no gain on the tuning window (3.98% vs 4.00%; better in only 15 of 34 regions), so it was not adopted.</li>
+<li><strong>Mean-based "unreliable official data" rule:</strong> I first implemented it with the mean, which flagged 6 regions because of a few glitch hours. I corrected it to the median, as originally specified.</li>
+<li><strong>Zero-filled weather:</strong> missing 2022–23 humidity, cloud, wind and sunlight values were first averaged as 0. I caught it, fixed it, and covered it with tests.</li>
+</ul>
+<h2>Live</h2>
+<p>The model was frozen on 2026-11-15. A GitHub Action publishes tomorrow's forecast every day at 12:00 UTC and commits it before the day begins, with a "what pushed it up or down" explanation from the model's SHAP values. Each finished day is scored automatically and added to a public track-record calendar, next to the backtest numbers, so anyone can see whether the backtest held up.</p>
+<h2>Check the numbers yourself</h2>
+<p>The site has a SQL console (DuckDB running in the browser) over every scored hour, every region and every daily peak, with example queries. Every number in this write-up can be reproduced there.</p>
+<h2>Next steps</h2>
+<ul>
+<li>Confirm the <strong>storm-warning signal</strong> on the 2027 hurricane season, then adopt it as model v2.</li>
+<li>Find inputs that explain the operators' peak advantage (same-morning load data, large-customer schedules).</li>
+<li>Compare live results with the backtest after 3–6 months.</li>
+</ul>
+</div></main>
+<footer><div class="wrap"><span>Built by Maxwell Liston</span>
+  <nav aria-label="Footer"><a href="/beat-the-grid/writeup.html">Write-up</a><a href="/beat-the-grid/changelog.html">Changelog</a><a href="/beat-the-grid/privacy.html">Privacy</a><a href="/beat-the-grid/terms.html">Terms</a><a href="https://github.com/MaxListon/beat-the-grid">Code</a></nav></div></footer>
+<script src="/beat-the-grid/config.js?v=51aedb09f1"></script>
+<script src="/beat-the-grid/site.js?v=eba6501da6"></script>
+</body>
+</html>

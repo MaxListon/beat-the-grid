@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beat the Grid: An Open Model vs. US Grid Operator Forecasts</title>
+<meta name="description" content="Can one open model forecast tomorrow's electricity demand better than America's grid operators? A fair, statistically tested, live contest across 34 US grid regions.">
+<link rel="canonical" href="https://maxliston.github.io/beat-the-grid/">
+<meta name="theme-color" content="#1c5cab">
+<meta name="author" content="Maxwell Liston">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Beat the Grid">
+<meta property="og:title" content="Beat the Grid: An Open Model vs. US Grid Operator Forecasts">
+<meta property="og:description" content="One open model, 34 US grid regions, a fair walk-forward backtest with significance tests, and a live daily forecast committed before each day begins.">
+<meta property="og:url" content="https://maxliston.github.io/beat-the-grid/">
+<meta property="og:image" content="https://maxliston.github.io/beat-the-grid/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Beat the Grid: headline result of an open model against official US grid demand forecasts">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Beat the Grid: An Open Model vs. US Grid Operator Forecasts">
+<meta name="twitter:description" content="A fair, statistically tested, live forecasting contest across 34 US grid regions.">
+<meta name="twitter:image" content="https://maxliston.github.io/beat-the-grid/og.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="data/summary.json" as="fetch" crossorigin>
+<link rel="stylesheet" href="style.css?v=7fb97c857f">
+<script>document.documentElement.classList.add("js");</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Beat the Grid","url":"https://maxliston.github.io/beat-the-grid/",
+ "description":"An open forecasting contest: one model against official day-ahead electricity demand forecasts for 34 US grid regions.",
+ "author":{"@type":"Person","name":"Maxwell Liston","url":"https://linkedin.com/in/maxwell-liston"}}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="topnav" aria-label="Main">
+  <div class="wrap navrow">
+    <a class="brand" href="#top"><img src="favicon.svg" width="22" height="22" alt=""> Beat the Grid</a>
+    <span class="pill" id="statusPill" role="status"><i class="sdot"></i><span>Loading status…</span></span>
+    <div class="navlinks">
+      <a href="#scoreboard">Results</a><a href="#explore">Explore</a><a href="#peaks">Peaks</a><a href="#sql">SQL</a><a href="#method">Method</a><a class="navcta" href="#contact">Contact</a>
+    </div>
+    <button id="themeBtn" class="ghost" aria-label="Switch between light and dark theme">Theme</button>
+  </div>
+</nav>
+
+<aside class="toc" aria-label="On this page">
+  <p>On this page</p>
+  <a href="#top">Overview</a><a href="#scoreboard">Scoreboard</a><a href="#results">Region by region</a><a href="#explore">Explore a region</a>
+  <a href="#when">When it wins</a><a href="#peaks">The peak contest</a><a href="#together">Better together</a><a href="#misses">Where it failed</a><a href="#live">Live record</a><a href="#sql">Query the data</a>
+  <a href="#method">Method</a><a href="#contact">Contact</a>
+</aside>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">Open forecasting contest · 34 US grid regions</p>
+      <h1>Can an open model out-forecast America's grid operators?</h1>
+      <p class="lede">Every day, each US grid operator predicts tomorrow's electricity demand. I built one model, held it to the information it would really have had, and scored it against them hour by hour. Then I put it live.</p>
+      <ul class="findings" id="findings">
+        <li class="skel-line"></li><li class="skel-line"></li><li class="skel-line"></li>
+      </ul>
+      <div class="cta-row">
+        <a class="btn" href="#explore">See tomorrow's live forecast</a>
+        <a class="secondary" href="writeup.html">Read the write-up</a>
+      </div>
+      <p class="badge-row" id="versionBadge"></p>
+    </div>
+    <figure class="card hero-card">
+      <figcaption><b id="heroTitle">PJM Interconnection</b><span id="heroSub">Largest US grid · last 3 days</span></figcaption>
+      <div class="series-legend" id="heroLegend"></div>
+      <div id="heroChart" class="chart hero-chart"><div class="skel skel-block"></div></div>
+    </figure>
+  </div>
+</header>
+
+<main id="main">
+<section id="scoreboard" class="alt">
+  <div class="wrap">
+    <p class="kicker">The scoreboard</p>
+    <h2>A split decision, and an honest one</h2>
+    <p class="takeaway" id="scoreTakeaway"><span class="skel-line"></span></p>
+    <div class="verdict" id="verdict">
+      <div class="verdict-main"><span class="big" id="vWins">–</span><span class="of" id="vOf"></span></div>
+      <p class="verdict-sub" id="vSub"></p>
+    </div>
+    <div class="tiles" id="tiles"><div class="tile skel"></div><div class="tile skel"></div><div class="tile skel"></div><div class="tile skel"></div></div>
+    <details class="more"><summary>How regions were chosen, and a stricter check</summary><div id="resultsSub"></div></details>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap">
+    <p class="kicker">Region by region</p>
+    <h2>Where the model wins and loses</h2>
+    <p class="takeaway" id="mapTakeaway"></p>
+    <div class="card map-card">
+      <div class="map-head">
+        <div class="legend" id="mapLegend"></div>
+        <div class="chips" role="group" aria-label="Filter regions by result" id="filters">
+          <button type="button" class="chip" data-f="all" aria-pressed="true">All</button>
+          <button type="button" class="chip" data-f="win" aria-pressed="false">Wins</button>
+          <button type="button" class="chip" data-f="tie" aria-pressed="false">Ties</button>
+          <button type="button" class="chip" data-f="loss" aria-pressed="false">Losses</button>
+        </div>
+      </div>
+      <div id="map" class="map"><div class="skel skel-block"></div></div>
+    </div>
+    <div class="card">
+      <div class="table-tools">
+        <p class="note" id="sparkNote"></p>
+        <label class="check"><input type="checkbox" id="showSuspect"> Show regions with unreliable official data</label>
+      </div>
+      <div class="table-wrap"><table class="lb" id="lb"><caption class="sr-only">Results for every grid region</caption><thead></thead><tbody></tbody></table></div>
+      <p class="note" id="lbNote"></p>
+    </div>
+  </div>
+</section>
+
+<section id="explore" class="alt">
+  <div class="wrap">
+    <p class="kicker">Explore a region</p>
+    <h2>Hour by hour, every region</h2>
+    <p class="takeaway">Blue is my model with its 80% range, orange is the grid operator's day-ahead forecast, and the dark line is what actually happened. The shaded area at the end is tomorrow's live forecast.</p>
+    <div class="card">
+      <div class="explore-controls">
+        <label class="field-inline"><span>Region</span><select id="regionSel"></select></label>
+        <label class="field-inline"><span>Compare with</span><select id="compareSel"><option value="">None</option></select></label>
+        <div class="seg" role="group" aria-label="Time range" id="rangeSeg">
+          <button type="button" data-d="7" aria-pressed="false">7 days</button>
+          <button type="button" data-d="14" aria-pressed="true">14 days</button>
+          <button type="button" data-d="30" aria-pressed="false">30 days</button>
+        </div>
+        <button type="button" class="ghost" id="csvBtn">Download CSV</button>
+      </div>
+      <div class="mini" id="regionStats"></div>
+      <div class="why" id="whyCard" hidden></div>
+      <div class="series-legend" id="seriesLegend"></div>
+      <div id="seriesChart" class="chart tall"><div class="skel skel-block"></div></div>
+      <div id="compareWrap" hidden>
+        <h3 class="compare-title" id="compareTitle"></h3>
+        <div class="mini" id="compareStats"></div>
+        <div id="compareChart" class="chart tall"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="when">
+  <div class="wrap">
+    <p class="kicker">When it wins</p>
+    <h2>Strong overnight, beaten at the evening peak</h2>
+    <p class="takeaway" id="whenTakeaway"></p>
+    <div class="grid2">
+      <div class="card"><h3>By hour of the day</h3><p class="cap" id="hourCap"></p><div class="legend legend2"></div><div id="hourChart" class="chart"></div></div>
+      <div class="card"><h3>By month</h3><p class="cap" id="monthCap"></p><div class="legend legend2"></div><div id="monthChart" class="chart"></div></div>
+    </div>
+    <div class="card">
+      <h3>On the days that matter most</h3>
+      <p class="cap" id="dayCap"></p>
+      <div id="dayChart" class="chart short"></div>
+    </div>
+    <details class="more"><summary>Why these charts use only some regions</summary>
+      <p>These averages use only the regions whose official forecast is clearly genuine (median error under 5%), so regions with weak official numbers can't tilt the picture in my favour.</p></details>
+  </div>
+</section>
+
+<section id="peaks" class="alt">
+  <div class="wrap">
+    <p class="kicker">The peak contest</p>
+    <h2>Who calls the daily peak better?</h2>
+    <p class="takeaway" id="peakTakeaway"><span class="skel-line"></span></p>
+    <div class="tiles" id="peakTiles"><div class="tile skel"></div><div class="tile skel"></div><div class="tile skel"></div><div class="tile skel"></div></div>
+    <div class="card" style="margin-top:16px">
+      <div class="map-head">
+        <h3 style="margin:0">Daily peak error by region</h3>
+        <div class="legend" id="peakLegend"></div>
+      </div>
+      <p class="cap" id="peakCap"></p>
+      <div id="peakChart" class="chart auto"><div class="skel skel-block"></div></div>
+      <button type="button" class="ghost" id="peakMore" aria-expanded="false">Show all regions</button>
+    </div>
+    <details class="more"><summary>How the peak is scored, and what I tried</summary><div id="peakNote"></div></details>
+  </div>
+</section>
+
+<section id="together">
+  <div class="wrap">
+    <p class="kicker">Better together</p>
+    <h2>The best forecast uses both</h2>
+    <p class="takeaway" id="togetherTakeaway"></p>
+    <div class="tiles" id="blendTiles"></div>
+    <div class="card" style="margin-top:16px">
+      <h3>How much an operator should trust my model</h3>
+      <p class="cap">Share of the blended forecast that comes from my model, by region and time of day. Darker means more weight on my model; the rest comes from the operator's own forecast.</p>
+      <div class="table-wrap"><table class="lb heat" id="blendTable"><caption class="sr-only">Blend weights by region and time of day</caption></table></div>
+    </div>
+    <details class="more"><summary>What that's worth, and how the blend was tested</summary><div id="valueNote"></div></details>
+  </div>
+</section>
+
+<section id="misses" class="alt">
+  <div class="wrap">
+    <p class="kicker">Where it failed</p>
+    <h2>The ten worst days, explained</h2>
+    <p class="takeaway">Three of the worst came from two hurricanes: the weather forecast was right, but millions of customers lost power. Operators knew about the outages; a weather-driven model can't.</p>
+    <div class="misses" id="missList"></div>
+    <div class="card storm-note">
+      <h3>Can storm warnings fix this? An experiment</h3>
+      <p>Hurricane, tropical-storm, storm-surge, extreme-wind and ice-storm warnings are public before a storm hits. I added two inputs from the National Weather Service archive: the share of a region's cities under a warning at issue time, and the share where one just ended. Only warnings already in effect at 12:00 UTC the day before count. Rerun through the same walk-forward backtest:</p>
+      <ul>
+        <li>Error on the ~5,100 storm hours fell from <b>8.3% to 7.9%</b>; ordinary days were unchanged.</li>
+        <li>Hurricane days improved by 13–35%: Dominion SC on Helene <b>30.9% → 20.2%</b>, FPL on Milton <b>28.0% → 23.4%</b>, Duke on Helene 30.0% → 26.1%.</li>
+        <li>The overall score barely moved (3.08% either way; one loss became a tie).</li>
+      </ul>
+      <p class="cap">Not adopted yet. I thought of it after seeing these worst days, so its backtest gain is partly hindsight. It will be tested on new storms before it goes into the live model.</p>
+    </div>
+  </div>
+</section>
+
+<section id="live">
+  <div class="wrap">
+    <p class="kicker">The live record</p>
+    <h2>Forecasts published before the day begins</h2>
+    <p class="takeaway">A backtest can be tuned until it looks good; a live record can't. Every morning at 12:00 UTC an automated job publishes tomorrow's forecast with a model frozen at launch and commits it to GitHub before the day begins.</p>
+    <div class="card" id="liveCard"></div>
+  </div>
+</section>
+
+<section id="sql" class="alt">
+  <div class="wrap">
+    <p class="kicker">Query the data yourself</p>
+    <h2>Run SQL on every scored hour</h2>
+    <p class="takeaway">Every number on this page comes from these tables. Pick a question or write your own SQL. It runs in your browser with DuckDB, so nothing is sent to a server.</p>
+    <div class="card sql-card">
+      <div class="chips" role="group" aria-label="Example questions" id="sqlPresets"></div>
+      <label class="sr-only" for="sqlInput">SQL query</label>
+      <textarea id="sqlInput" class="sql-input" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" rows="9"></textarea>
+      <div class="sql-bar">
+        <button type="button" class="btn small" id="sqlRun">Run query</button>
+        <span class="hint" id="sqlHint">Ctrl / ⌘ + Enter. First run loads a ~7 MB database engine.</span>
+        <button type="button" class="ghost" id="sqlCsv" hidden>Download results CSV</button>
+      </div>
+      <p class="sql-status" id="sqlStatus" role="status" aria-live="polite"></p>
+      <div class="table-wrap sql-out" id="sqlOut"></div>
+      <details class="more"><summary>Tables and columns</summary><div id="sqlSchema">
+        <p><b>hourly</b>: one row per scored region-hour (glitch hours removed, same rows as the headline). <code>region</code>, <code>hour_ending_utc</code>, <code>local_date</code>, <code>local_hour</code>, <code>actual_mw</code>, <code>official_mw</code>, <code>ours_mw</code>, <code>ours_low_mw</code> / <code>ours_high_mw</code> (80% range), <code>blend_mw</code>.</p>
+        <p><b>regions</b>: one row per region. <code>region</code>, <code>name</code>, <code>area</code>, <code>avg_demand_mw</code>, <code>in_headline</code>, <code>in_strict_check</code>, <code>result</code>, <code>error_ours</code>, <code>error_official</code>, <code>error_blend</code>, <code>p_value_holm</code>, <code>hours</code>.</p>
+        <p><b>peaks</b>: one row per region-day. <code>region</code>, <code>local_date</code>, <code>actual_peak_mw</code> / <code>_hour</code>, <code>ours_peak_mw</code> / <code>_hour</code>, <code>official_peak_mw</code> / <code>_hour</code>.</p>
+        <p>Errors are fractions (0.031 = 3.1%). Results show the first 500 rows; the CSV download has all of them.</p>
+      </div></details>
+    </div>
+  </div>
+</section>
+
+<section id="method">
+  <div class="wrap">
+    <p class="kicker">Method</p>
+    <h2>How the contest stays fair</h2>
+    <p class="takeaway">Four rules, each enforced in code and covered by tests.</p>
+    <div class="accordion">
+      <details open><summary>The rules</summary><ul>
+        <li><b>Issue time:</b> each forecast covers one local calendar day and is issued at 12:00 UTC the day before (4 am Pacific, 7 am Eastern).</li>
+        <li><b>Data cutoff:</b> the model may only use demand reported up to 06:00 UTC that morning. A test scrambles all later data and checks that nothing changes.</li>
+        <li><b>Weather:</b> archived <em>forecasts</em> made at least 48 hours ahead, never observed weather.</li>
+        <li><b>Same hours:</b> both forecasts are scored only where actual demand, the official forecast and mine all exist. Hours where either is off by more than 50% are reporting glitches and are dropped for both.</li>
+      </ul></details>
+      <details><summary>The model</summary><ul>
+        <li>One gradient-boosted model (LightGBM) shared by all 34 regions. It predicts demand as a ratio to the past week's average, so small and large regions learn from each other.</li>
+        <li>Inputs: recent demand, calendar and holidays, and population-weighted weather forecasts for each region's largest cities (temperature, humidity, cloud, wind, sunlight).</li>
+        <li>An 80% range for every hour from quantile models, calibrated per region with conformal prediction.</li>
+        <li>Settings were tuned on April–June 2024, a window that is never scored.</li>
+      </ul></details>
+      <details><summary>Testing it honestly</summary><ul>
+        <li><b>Walk-forward:</b> retrained every quarter on the past only, then scored on the following three months it had never seen.</li>
+        <li><b>Significance:</b> Diebold-Mariano test on daily errors, with Newey-West variance and Holm correction across regions. A "win" means the difference is very unlikely to be luck.</li>
+        <li><b>No cherry-picking:</b> regions were chosen by data coverage alone, before scoring.</li>
+      </ul></details>
+      <details><summary>Limits I'd flag</summary><ul>
+        <li>Some operators may refresh their "day-ahead" forecast closer to real time, which would give them an edge in this comparison.</li>
+        <li>Weather comes from up to three cities per region. I tested five per region on the tuning window and it didn't help, so I kept three.</li>
+        <li>Archived humidity, cloud, wind and sunlight forecasts only exist from February 2024, so scoring starts in July 2024.</li>
+        <li>The live model has no outage signal, so storms that cut power (Hurricanes Helene and Milton) are its worst days. A storm-warning input helps (see “Where it failed”) but isn't adopted until it's tested on new storms.</li>
+      </ul></details>
+    </div>
+    <p class="sources">Data: U.S. Energy Information Administration, Hourly Electric Grid Monitor (EIA-930) · Weather forecasts: Open-Meteo (CC BY 4.0) · Prices: EIA wholesale market data · Code, tests and every forecast: <a href="https://github.com/MaxListon/beat-the-grid">github.com/MaxListon/beat-the-grid</a></p>
+  </div>
+</section>
+
+<section id="contact" class="alt">
+  <div class="wrap contact">
+    <div>
+      <p class="kicker">Contact</p>
+      <h2>Get in touch</h2>
+      <p class="sub">I'm Maxwell Liston, an Informatics (Data Science) student at the University of Washington, looking for a Summer 2027 data analyst internship. If this is the kind of work your team does, I'd love to hear from you.</p>
+      <p class="sub">Prefer LinkedIn? <a href="https://linkedin.com/in/maxwell-liston" rel="noopener">linkedin.com/in/maxwell-liston</a></p>
+    </div>
+    <div class="card" id="contactBox">
+      <form id="contactForm" novalidate>
+        <div class="field"><label for="name">Name</label>
+          <input id="name" name="name" autocomplete="name" required minlength="2" maxlength="100" aria-describedby="nameErr"><p class="err" id="nameErr" aria-live="polite"></p></div>
+        <div class="field"><label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required maxlength="200" aria-describedby="emailErr"><p class="err" id="emailErr" aria-live="polite"></p></div>
+        <div class="field"><label for="company">Company <span class="hint">(optional)</span></label>
+          <input id="company" name="company" autocomplete="organization" maxlength="120"></div>
+        <div class="field"><label for="message">Message</label>
+          <textarea id="message" name="message" required minlength="20" maxlength="5000" aria-describedby="messageErr"></textarea><p class="err" id="messageErr" aria-live="polite"></p></div>
+        <div class="hp" aria-hidden="true"><label for="website">Leave this field empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+        <input type="hidden" name="_subject" value="Beat the Grid: new message">
+        <button class="btn" type="submit">Send message</button>
+        <p id="formStatus" role="alert"></p>
+        <p class="note">Your message is only used to reply to you. See the <a href="privacy.html">privacy policy</a>.</p>
+      </form>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  <span>Built by Maxwell Liston · <span id="updated"></span></span>
+  <nav aria-label="Footer"><a href="writeup.html">Write-up</a><a href="changelog.html">Changelog</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="https://github.com/MaxListon/beat-the-grid">Code</a></nav>
+</div></footer>
+<div id="tip" class="tip" role="tooltip" hidden></div>
+
+<script src="config.js?v=51aedb09f1"></script>
+<script src="site.js?v=eba6501da6"></script>
+<script src="contact.js?v=7475b973ea" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" defer></script>
+<script src="app.js?v=19eefd7c44" defer></script>
+<script type="module" src="sql.js?v=8e488f8717"></script>
+</body>
+</html>

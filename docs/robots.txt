@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /beat-the-grid/thanks.html
+
+Sitemap: https://maxliston.github.io/beat-the-grid/sitemap.xml
