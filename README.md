@@ -1,10 +1,23 @@
 # ⚡ Beat the Grid
 
+[![Live site](https://img.shields.io/badge/live%20site-maxliston.github.io%2Fbeat--the--grid-1c5cab)](https://maxliston.github.io/beat-the-grid/)
+[![Daily forecast](https://github.com/MaxListon/beat-the-grid/actions/workflows/daily.yml/badge.svg)](https://github.com/MaxListon/beat-the-grid/actions/workflows/daily.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab)](requirements.txt)
+[![License: MIT](https://img.shields.io/badge/license-MIT-555)](LICENSE)
+
 **Can one open model forecast tomorrow's electricity demand better than America's grid operators?**
 
 Every day, each US balancing authority (the organization that keeps its region's grid in balance) publishes a day-ahead forecast of hourly electricity demand. This project builds one machine-learning model, gives it **only the information it would have had the morning before**, and scores it against those official forecasts across **34 grid regions**. They cover nearly all US electricity demand. Then it runs live: a new forecast is published every day and committed to this repo **before** the day it predicts.
 
-**Website:** https://maxliston.github.io/beat-the-grid/
+**Website:** https://maxliston.github.io/beat-the-grid/ · **Write-up:** [WRITEUP.md](WRITEUP.md) · **Every live forecast:** [forecasts/](forecasts/)
+
+[![Beat the Grid website: hero chart of PJM demand, my forecast and the official forecast](.github/media/hero.png)](https://maxliston.github.io/beat-the-grid/)
+
+| The peak contest | Query the data yourself (SQL in the browser) |
+|---|---|
+| [![Daily peak error by region, my model vs the official forecast](.github/media/peaks.png)](https://maxliston.github.io/beat-the-grid/#peaks) | [![SQL console running a monthly error query](.github/media/sql.png)](https://maxliston.github.io/beat-the-grid/#sql) |
+
+**Skills shown:** Python (pandas, LightGBM), SQL (DuckDB), statistics (Diebold-Mariano tests, Holm correction, conformal prediction intervals), walk-forward backtesting, data engineering (EIA and weather APIs, Parquet), automation (GitHub Actions), data visualization (D3.js), and honest reporting of what didn't work.
 
 <!-- RESULTS:START -->
 ## Results (backtest 2024-07-01 → 2026-11-14, 696,190 region-hours)
@@ -19,9 +32,11 @@ Every day, each US balancing authority (the organization that keeps its region's
 
 80% prediction interval coverage: 79%.
 
-**Model + operator.** Blending my forecast with the official one, with weights learned walk-forward per region and time of day, gives **2.45%** error and beats the official forecast alone in **28 of 31** regions (strict set: 2.32% vs 3.20%, 22 of 25). Annualised, that is 151 TWh of mis-forecast electricity for the official forecasts vs 102 TWh blended, worth roughly $2.8 billion a year at 2026 wholesale prices (an illustration of scale, not a cost estimate).
+**Model + operator.** Blending my forecast with the official one, with weights learned walk-forward per region and time of day, gives **2.45%** error and beats the official forecast alone in **28 of 31** regions (strict set: 2.32% vs 3.20%, 22 of 25). Annualised, that is 151 TWh of mis-forecast electricity for the official forecasts vs 102 TWh blended. At 2026 wholesale prices that energy is worth about $9.2 billion vs $6.4 billion a year (an illustration of scale, not a cost estimate).
 
 **Strict check.** Limited to the 25 regions whose official forecast is clearly genuine (median error ≤ 5%, 86% of demand): 6 wins, 14 losses, 5 ties; load-weighted error 3.05% (mine) vs 3.20% (official) vs 2.56% (average of both).
+
+**The peak contest.** On each day's highest hour the operators are clearly better: 19 losses, 10 wins, 2 ties for my model; peak error 3.26% (mine) vs 2.87% (official) vs 2.40% (blend).
 
 **Takeaway.** The operators win more regions (their best forecasts are within 1–2%). My model wins PJM, the largest US grid, and California, and has the lower demand-weighted error. Averaging the two beats either one: they make different mistakes.
 

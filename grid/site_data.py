@@ -132,14 +132,18 @@ def update_readme(summary: dict) -> None:
         + (f" (strict set: {h['strict']['load_weighted_mape_blend'] * 100:.2f}% vs {h['strict']['load_weighted_mape_official'] * 100:.2f}%, "
            f"{h['strict']['blend_beats_official']} of {h['strict']['regions']})." if 'strict' in h else ".")
         + (f" Annualised, that is {h['value']['gwh_official'] / 1000:.0f} TWh of mis-forecast electricity for the official forecasts vs "
-           f"{h['value']['gwh_blend'] / 1000:.0f} TWh blended, worth roughly ${(h['value']['usd_official'] - h['value']['usd_blend']) / 1e9:.1f} billion "
-           f"a year at 2026 wholesale prices (an illustration of scale, not a cost estimate)." if 'value' in h else ""),
+           f"{h['value']['gwh_blend'] / 1000:.0f} TWh blended. At 2026 wholesale prices that energy is worth about "
+           f"${h['value']['usd_official'] / 1e9:.1f} billion vs ${h['value']['usd_blend'] / 1e9:.1f} billion a year (an illustration of scale, not a cost estimate)." if 'value' in h else ""),
         "",
         f"**Strict check.** Limited to the {h['strict']['regions']} regions whose official forecast is clearly genuine "
         f"(median error ≤ {h['strict']['threshold'] * 100:.0f}%, {h['strict']['share_of_demand'] * 100:.0f}% of demand): "
         f"{h['strict']['wins']} wins, {h['strict']['losses']} losses, {h['strict']['ties']} ties; load-weighted error "
         f"{h['strict']['load_weighted_mape_ours'] * 100:.2f}% (mine) vs {h['strict']['load_weighted_mape_official'] * 100:.2f}% (official) "
         f"vs {h['strict']['load_weighted_mape_combo'] * 100:.2f}% (average of both).",
+        "",
+        (f"**The peak contest.** On each day's highest hour the operators are clearly better: {h['peaks']['losses']} losses, "
+         f"{h['peaks']['wins']} wins, {h['peaks']['ties']} ties for my model; peak error {h['peaks']['peak_ours'] * 100:.2f}% (mine) vs "
+         f"{h['peaks']['peak_official'] * 100:.2f}% (official) vs {h['peaks']['peak_blend'] * 100:.2f}% (blend)." if 'peaks' in h else ""),
         "",
         "**Takeaway.** The operators win more regions (their best forecasts are within 1–2%). My model wins PJM, the largest "
         "US grid, and California, and has the lower demand-weighted error. Averaging the two beats either one: they make different mistakes.",
