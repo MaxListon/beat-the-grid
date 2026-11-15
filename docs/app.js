@@ -366,7 +366,7 @@
     el.innerHTML = `<h3>Tomorrow (${W.target}), live forecast</h3><div class="facts">` +
       `<span>Average <b>${gw(r.avg_mw)}</b> (${sign(r.vs_last_week)} vs last week)</span>` +
       `<span>Peak <b>${gw(r.peak_mw)}</b> around ${hr(r.peak_hour)}</span>` +
-      `<span>Hottest hour <b>${r.max_temp_c.toFixed(0)}°C / ${(r.max_temp_c * 9 / 5 + 32).toFixed(0)}°F</b> (${dT >= 0 ? "+" : MINUS}${Math.abs(dT).toFixed(1)}°C vs a week earlier)</span></div>` +
+      (r.max_temp_c == null ? "" : `<span>Hottest hour <b>${r.max_temp_c.toFixed(0)}°C / ${(r.max_temp_c * 9 / 5 + 32).toFixed(0)}°F</b>${dT == null ? "" : ` (${dT >= 0 ? "+" : MINUS}${Math.abs(dT).toFixed(1)}°C vs a week earlier)`}</span>`) + `</div>` +
       `<div class="cap" style="margin:0 0 4px">What pushed the forecast up or down, as a share of last week's average:</div>` +
       Object.entries(r.drivers).map(([k, v]) => {
         const w = Math.abs(v) / max * 50;
@@ -528,23 +528,28 @@
   }
 
   /* ---------- live ---------- */
+  function voidNote(L) {
+    const v = (L && L.voided) || [];
+    return v.length ? `<details class="more"><summary>${v.length} voided forecast${v.length > 1 ? "s" : ""}</summary>` +
+      v.map((d) => `<p><b>${d.date}</b>, voided ${d.voided_at_utc.replace("T", " ").replace("Z", " UTC")}, before the day began: ${d.reason}</p>`).join("") + `</details>` : "";
+  }
   function renderLive() {
     const el = $("#liveCard"), L = LIVE;
     if (!L || !L.forecasts_issued) {
-      el.innerHTML = `<p style="margin:0">The live record begins on launch day. From then on, every forecast appears in <a href="https://github.com/MaxListon/beat-the-grid/tree/main/forecasts">forecasts/</a> with the time it was committed, and each finished day is scored here automatically.</p>`;
+      el.innerHTML = `<p style="margin:0">The live record begins on launch day. From then on, every forecast appears in <a href="https://github.com/MaxListon/beat-the-grid/tree/main/forecasts">forecasts/</a> with the time it was committed, and each finished day is scored here automatically.</p>` + voidNote(L);
       return;
     }
     const head = `<div class="live-grid">` +
       `<div class="tile"><b>${L.forecasts_issued}</b><span>daily forecasts published${L.latest_issued ? `, latest for ${L.latest_issued}` : ""}</span></div>` +
       `<div class="tile"><b>${L.days || 0}</b><span>days scored so far</span></div>` +
       `<div class="tile"><b>${L.start_date || "–"}</b><span>first scored day</span></div></div>`;
-    if (!L.days) { el.innerHTML = head + `<p class="cap">Scores appear once EIA has reported the whole day, usually about two days later.</p>`; return; }
+    if (!L.days) { el.innerHTML = head + `<p class="cap">Scores appear once EIA has reported the whole day, usually about two days later.</p>` + voidNote(L); return; }
     const rows = L.regions.slice().sort((a, b) => (b.mape_official - b.mape_ours) - (a.mape_official - a.mape_ours));
     const won = rows.filter((r) => r.mape_ours < r.mape_official).length;
     el.innerHTML = head + calendarHTML(L.by_day || []) + `<p class="cap">So far my error is lower in <b>${won} of ${rows.length}</b> regions over ${L.days} live day${L.days > 1 ? "s" : ""}. With only a few weeks of data these numbers are noisy; the backtest is the stronger evidence until the live record grows.</p>` +
       `<div class="table-wrap"><table class="lb"><thead><tr><th>Region</th><th class="num">Days</th><th class="num">My error</th><th class="num">Official</th><th class="num">Days I was closer</th></tr></thead><tbody>` +
       rows.map((r) => { const meta = LB.find((x) => x.ba === r.ba) || {}; return `<tr data-ba="${r.ba}" tabindex="0"><td class="reg"><b>${meta.name || r.ba}</b><span>${r.ba}</span></td><td class="num">${r.days}</td><td class="num">${pct(r.mape_ours, 2)}</td><td class="num">${pct(r.mape_official, 2)}</td><td class="num">${r.days_won} of ${r.days}</td></tr>`; }).join("") +
-      `</tbody></table></div>`;
+      `</tbody></table></div>` + voidNote(L);
     bindCalendar(el, L.by_day || []);
     el.querySelectorAll("tr[data-ba]").forEach((tr) => { tr.addEventListener("click", () => goExplore(tr.dataset.ba)); tr.addEventListener("keydown", (e) => { if (e.key === "Enter") goExplore(tr.dataset.ba); }); });
   }

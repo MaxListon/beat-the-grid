@@ -15,21 +15,35 @@ import pandas as pd
 
 from . import eia as eia_mod
 from . import model, weather
-from .config import FORECASTS, MODELS, PROCESSED
+from .config import FORECASTS, MODELS, PROCESSED, live_files
 from .features import build_region
 from .regions import REGIONS, unique_points
 
 FROZEN = MODELS / "frozen"
 
 
-def recent_eia(days: int = 45) -> pd.DataFrame:
+def recent_eia(days: int = 400) -> pd.DataFrame:
+    """Demand history for the live forecast, the same inputs the backtest had at each cutoff.
+
+    Over a year of history (the model compares last week with the past year), from the six-month
+    bulk files, which lag by a day or more. The newest hours come from EIA's live Grid Monitor feed,
+    used only where the bulk files have no value yet.
+    """
     today = dt.date.today()
-    halves = [(today.year, "Jul_Dec" if today.month >= 7 else "Jan_Jun")]
-    if (today.month in (1, 7)) and today.day <= days // 2 + 15:   # also need the previous half-year file
-        halves.append((today.year - 1, "Jul_Dec") if today.month == 1 else (today.year, "Jan_Jun"))
-    frames = [eia_mod.parse(eia_mod.download(y, h, force=True)) for y, h in halves]
+    start = today - dt.timedelta(days=days)
+    halves, y, h = [], start.year, "Jan_Jun" if start.month < 7 else "Jul_Dec"
+    while (y, h) <= (today.year, "Jan_Jun" if today.month < 7 else "Jul_Dec"):
+        halves.append((y, h))
+        y, h = (y, "Jul_Dec") if h == "Jan_Jun" else (y + 1, "Jan_Jun")
+    frames = [eia_mod.parse(eia_mod.download(y, h)) for y, h in halves]
     df = pd.concat(frames).drop_duplicates(["ba", "ts"], keep="last")
-    return df[df.ts >= pd.Timestamp(today - dt.timedelta(days=days), tz="UTC")]
+    df = df[df.ts >= pd.Timestamp(start, tz="UTC")]
+    rt = eia_mod.realtime(list(REGIONS), today - dt.timedelta(days=4), today + dt.timedelta(days=1))
+    df = df.merge(rt, on=["ba", "ts"], how="outer")
+    df["from_rt"] = df.demand.isna() & df.demand_rt.notna()      # scored only once the bulk file has it
+    df["demand"] = df.demand.fillna(df.demand_rt)
+    df["official_fc"] = df.official_fc.fillna(df.official_fc_rt)
+    return df.drop(columns=["demand_rt", "official_fc_rt"]).sort_values(["ba", "ts"], ignore_index=True)
 
 
 def live_weather() -> pd.DataFrame:
@@ -61,9 +75,18 @@ def issue(target: dt.date, eia: pd.DataFrame, wx: pd.DataFrame, now: pd.Timestam
     out.insert(0, "issued_at_utc", now.strftime("%Y-%m-%dT%H:%MZ"))
     FORECASTS.mkdir(parents=True, exist_ok=True)
     out.to_csv(path, index=False)
-    path.with_suffix(".why.json").write_text(json.dumps({"target": target.isoformat(), "regions": why}, indent=1))
+    path.with_suffix(".why.json").write_text(json.dumps({"target": target.isoformat(), "regions": _no_nan(why)}, indent=1))
     print(f"issued {path.name}: {out.ba.nunique()} regions")
     return out
+
+
+def _no_nan(o):
+    """JSON has no NaN; write missing numbers as null so browsers can parse the file."""
+    if isinstance(o, dict):
+        return {k: _no_nan(v) for k, v in o.items()}
+    if isinstance(o, float) and o != o:
+        return None
+    return o
 
 
 DRIVERS = {
@@ -97,9 +120,10 @@ def explain(models: dict, f: pd.DataFrame, p: pd.DataFrame) -> dict:
 
 def score(eia: pd.DataFrame) -> pd.DataFrame:
     """Daily live score per region for every forecast file whose day is fully reported."""
+    eia = eia[~eia.get("from_rt", False)] if "from_rt" in eia else eia
     actual = eia.assign(ts_utc=eia.ts.dt.strftime("%Y-%m-%dT%H:%MZ"))[["ba", "ts_utc", "demand", "official_fc"]]
     out = []
-    for f in sorted(FORECASTS.glob("20??-??-??.csv")):
+    for f in live_files(FORECASTS):
         fc = pd.read_csv(f).merge(actual, on=["ba", "ts_utc"], how="left")
         for ba, g in fc.groupby("ba"):
             ok = g[(g.demand > 0) & (g.official_fc > 0)]

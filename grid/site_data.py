@@ -11,7 +11,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from .config import BACKTEST_START, FORECASTS, PROCESSED, SITE_DATA
+from .config import BACKTEST_START, FORECASTS, PROCESSED, SITE_DATA, live_files, voided
 from . import blend, misses, peaks, sql_data, value
 from .evaluate import breakdowns, headline, leaderboard, scoreable
 from .regions import REGIONS, region_points
@@ -166,7 +166,7 @@ def _our_forecasts() -> pd.DataFrame:
     tail = FORECASTS / "backtest_tail.csv"
     if tail.exists():
         parts.append(pd.read_csv(tail).assign(source="backtest"))
-    for f in sorted(FORECASTS.glob("20??-??-??.csv")):
+    for f in live_files(FORECASTS):
         parts.append(pd.read_csv(f).assign(source="live"))
     df = pd.concat(parts, ignore_index=True)
     return df.sort_values("source").drop_duplicates(["ba", "ts_utc"], keep="last")   # live wins over backtest
@@ -211,11 +211,13 @@ def build_live(eia: pd.DataFrame, scores: pd.DataFrame) -> None:
                                     "days_won": int((g.mape_ours < g.mape_official).sum()),
                                     "coverage_80": g.in_80.mean(), "p_value": p})
         live["by_day"] = daily_record(scores)
-    issued = sorted(FORECASTS.glob("20??-??-??.csv"))
+    issued = live_files(FORECASTS)
     live["latest_issued"] = issued[-1].stem if issued else None
-    why = sorted(FORECASTS.glob("20??-??-??.why.json"))
-    (SITE_DATA / "why.json").write_text(why[-1].read_text() if why else '{"target":null,"regions":{}}')
+    why = live_files(FORECASTS, "20??-??-??.why.json")
+    # Older files may contain NaN (not valid JSON); normalise to null on the way to the website
+    (SITE_DATA / "why.json").write_text(why[-1].read_text().replace("NaN", "null") if why else '{"target":null,"regions":{}}')
     live["forecasts_issued"] = len(issued)
+    live["voided"] = [{"date": k, **v} for k, v in voided(FORECASTS).items()]
     live["updated_at"] = now.strftime("%Y-%m-%d %H:%M UTC")
     _dump("live.json", live)
     write_sitemap(now.strftime("%Y-%m-%d"))

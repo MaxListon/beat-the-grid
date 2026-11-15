@@ -98,8 +98,13 @@ def archive_point(name: str, lat: float, lon: float, end: dt.date) -> pd.DataFra
     return df
 
 
+# Features compare the target day's temperature with the same hour a week earlier, so the live
+# request must reach back further than 7 days before tomorrow (8+ days before today).
+LIVE_PAST_DAYS = 10
+
+
 def live_point(name: str, lat: float, lon: float) -> pd.DataFrame:
-    js = _get(LIVE_URL, {"latitude": lat, "longitude": lon, "timezone": "UTC", "past_days": 2,
+    js = _get(LIVE_URL, {"latitude": lat, "longitude": lon, "timezone": "UTC", "past_days": LIVE_PAST_DAYS,
                          "forecast_days": 3, "hourly": ",".join(VARS)})
     df = _frame(js)
     df["point"] = name

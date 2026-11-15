@@ -32,3 +32,19 @@ BACKTEST_START = "2024-07-01"
 FULL_WEATHER_FROM = 2024
 RETRAIN_EVERY_MONTHS = 3
 QUANTILES = (0.1, 0.5, 0.9)
+
+
+# ---- Live record
+def voided(folder: Path | None = None) -> dict:
+    """Days whose forecast is kept in the log but not scored (forecasts/void.json). Only ever added
+    before the day starts, with the reason, so voiding can't be used to drop bad results."""
+    import json
+    f = (folder or FORECASTS) / "void.json"
+    return json.loads(f.read_text()) if f.exists() else {}
+
+
+def live_files(folder: Path | None = None, pattern: str = "20??-??-??.csv") -> list:
+    """Forecast files in date order, excluding voided days."""
+    folder = folder or FORECASTS
+    v = voided(folder)
+    return [f for f in sorted(folder.glob(pattern)) if f.name[:10] not in v]

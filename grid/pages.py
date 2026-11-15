@@ -15,6 +15,11 @@ BASE = "/beat-the-grid/"
 SITE = "https://maxliston.github.io/beat-the-grid/"
 
 CHANGELOG = [
+    ("live", "2026-11-15", [
+        "Launch: first live forecast issued 12:01 UTC for 2026-11-16.",
+        "Bug found within the hour: the live job read demand only from EIA's bulk files (over a day behind) and only 45 days of history, so four demand inputs the model always had in the backtest were blank. The 2026-11-16 forecast was voided before the day began, kept unchanged in the log, and is not scored.",
+        "Fix: the live job now reads EIA's real-time Grid Monitor feed (about an hour behind, matching the backtest's 06:00 UTC data cutoff) plus a full year of history. A dry run confirmed live inputs now match the backtest. Scoring still uses EIA's cleaned bulk data only.",
+    ]),
     ("v1", "2026-11-15", [
         "Model frozen for the live contest (trained through 2026-11-14).",
         "Walk-forward backtest July 2024 – November 2026 across 34 regions, with Diebold-Mariano tests and Holm correction.",
@@ -87,7 +92,7 @@ def changelog_body() -> str:
     parts = ['<div class="log"><h1>Changelog</h1><p class="lede">Every change to the model or the method is listed here. '
              'The live record always says which model version made each forecast.</p>']
     for ver, date, items in CHANGELOG:
-        label = "Model " + ver if ver.startswith("v") else "Website"
+        label = "Model " + ver if ver.startswith("v") else ("Live system" if ver == "live" else "Website")
         parts.append(f"<h2>{label} <small>{date}</small></h2><ul>" + "".join(f"<li>{i}</li>" for i in items) + "</ul>")
     parts.append("</div>")
     return "\n".join(parts)

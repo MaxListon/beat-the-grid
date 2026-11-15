@@ -61,6 +61,38 @@ def parse(path: Path) -> pd.DataFrame:
     return df[["ba", "ts", "demand", "official_fc", "demand_raw"]]
 
 
+REALTIME = ("https://www.eia.gov/electricity/930-api/region_data/series_data?{resp}&type%5B0%5D=D&type%5B1%5D=DF"
+            "&start={s}%2000%3A00%3A00&end={e}%2000%3A00%3A00&frequency=hourly&timezone=Etc%2FUTC&limit=50000&offset=0")
+
+
+def realtime(bas: list[str], start: dt.date, end: dt.date, batch: int = 8) -> pd.DataFrame:
+    """Recent hours from the Grid Monitor's live feed (about 1 hour behind real time).
+
+    The six-month bulk files lag by more than a day, so the live job needs this feed to see demand
+    up to the 06:00 UTC cutoff. Same values and the same end-of-hour UTC timestamps as the bulk
+    files (checked hour by hour). Returns ba, ts, demand_rt, official_fc_rt.
+    """
+    import json
+    rows = []
+    for i in range(0, len(bas), batch):
+        resp = "&".join(f"respondent%5B{j}%5D={b}" for j, b in enumerate(bas[i:i + batch]))
+        url = REALTIME.format(resp=resp, s=start.strftime("%m%d%Y"), e=end.strftime("%m%d%Y"))
+        out = subprocess.run(["curl", "-sSfL", "--retry", "4", "--retry-delay", "5", "--max-time", "120", url],
+                             capture_output=True, text=True, check=True).stdout
+        for series in json.loads(out)[0]["data"]:
+            v = series["VALUES"]
+            for t, x in zip(v["DATES"], v["DATA"]):
+                if x is not None:
+                    rows.append((series["RESPONDENT_ID"], series["TYPE_ID"], t, float(x)))
+    if not rows:
+        return pd.DataFrame(columns=["ba", "ts", "demand_rt", "official_fc_rt"])
+    df = pd.DataFrame(rows, columns=["ba", "type", "ts", "v"])
+    df["ts"] = pd.to_datetime(df.ts, format="%m/%d/%Y %H:%M:%S", utc=True)
+    df = df.pivot_table(index=["ba", "ts"], columns="type", values="v").reset_index()
+    return df.rename(columns={"D": "demand_rt", "DF": "official_fc_rt"}).reindex(
+        columns=["ba", "ts", "demand_rt", "official_fc_rt"])
+
+
 def build(force_live: bool = True) -> pd.DataFrame:
     frames = []
     for y, h in halves():

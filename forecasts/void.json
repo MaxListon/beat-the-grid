@@ -1,0 +1,6 @@
+{
+ "2026-11-16": {
+  "voided_at_utc": "2026-11-15T12:07Z",
+  "reason": "Data-feed bug: the live job read demand only from EIA's bulk files, which lag by more than a day, and only 45 days of history, so four demand inputs were blank (they were always filled in the backtest). Voided before the day began and before any outcome was known; the file is kept unchanged. Fixed the same day: the live job now also reads EIA's real-time Grid Monitor feed and a full year of history."
+ }
+}

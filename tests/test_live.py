@@ -66,3 +66,24 @@ def test_scoring_waits_for_a_fully_reported_day(isolated):
     s = live.score(eia)
     assert len(s) == 1 and s.iloc[0].hours == 24
     assert 0 <= s.iloc[0].mape_ours < 1
+
+
+def test_live_weather_reaches_back_past_a_week():
+    from grid.weather import LIVE_PAST_DAYS
+    assert LIVE_PAST_DAYS >= 9   # temp_minus_lag7d for tomorrow needs weather from 8 days before today
+
+
+def test_why_file_has_no_nan():
+    import json
+    from grid.live import _no_nan
+    out = json.dumps(_no_nan({"a": {"t": float("nan"), "x": 1.0}}), allow_nan=False)
+    assert '"t": null' in out
+
+
+def test_voided_days_are_not_scored_or_shown(tmp_path):
+    import json
+    from grid.config import live_files
+    (tmp_path / "2026-11-16.csv").write_text("x")
+    (tmp_path / "2026-11-17.csv").write_text("x")
+    (tmp_path / "void.json").write_text(json.dumps({"2026-11-16": {"reason": "bug", "voided_at_utc": "2026-11-15T12:30Z"}}))
+    assert [f.name for f in live_files(tmp_path)] == ["2026-11-17.csv"]
