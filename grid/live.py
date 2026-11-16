@@ -41,8 +41,8 @@ def recent_eia(days: int = 400) -> pd.DataFrame:
     rt = eia_mod.realtime(list(REGIONS), today - dt.timedelta(days=4), today + dt.timedelta(days=1))
     df = df.merge(rt, on=["ba", "ts"], how="outer")
     df["from_rt"] = df.demand.isna() & df.demand_rt.notna()      # scored only once the bulk file has it
-    df["demand"] = df.demand.fillna(df.demand_rt)
-    df["official_fc"] = df.official_fc.fillna(df.official_fc_rt)
+    df["demand"] = df.demand.fillna(df.demand_rt.astype(df.demand.dtype))
+    df["official_fc"] = df.official_fc.fillna(df.official_fc_rt.astype(df.official_fc.dtype))
     return df.drop(columns=["demand_rt", "official_fc_rt"]).sort_values(["ba", "ts"], ignore_index=True)
 
 
