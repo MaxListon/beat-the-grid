@@ -245,7 +245,7 @@
   /* ---------- generic line chart with crosshair ---------- */
   function lineChart(el, o) {
     el.innerHTML = "";
-    const W = el.clientWidth, H = el.clientHeight, m = { t: 10, r: 12, b: 28, l: o.compact ? 46 : 54 };
+    const W = el.clientWidth, H = el.clientHeight, m = { t: o.shadeLabel ? 26 : 10, r: 12, b: 28, l: o.compact ? 46 : 54 };
     const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", o.label || "Chart");
     const x = o.xScale.range([m.l, W - m.r]);
     const all = o.series.flatMap((s) => s.values).concat(o.band ? o.band.lo.concat(o.band.hi) : []).filter((v) => v != null && !isNaN(v));
@@ -253,7 +253,7 @@
     const y = d3.scaleLinear().domain(o.yZero ? [0, ext[1] + pad] : [ext[0] - pad, ext[1] + pad]).nice().range([H - m.b, m.t]);
     if (o.shade) svg.append("rect").attr("x", x(o.shade[0])).attr("width", Math.max(0, x(o.shade[1]) - x(o.shade[0])))
       .attr("y", m.t).attr("height", H - m.b - m.t).attr("fill", css("--live"));
-    if (o.shade && o.shadeLabel) svg.append("text").attr("class", "lbl").attr("x", x(o.shade[0]) + 6).attr("y", m.t + 14).text(o.shadeLabel);
+    if (o.shade && o.shadeLabel) svg.append("text").attr("class", "lbl").attr("text-anchor", "end").attr("x", x(o.shade[1])).attr("y", m.t - 9).text(o.shadeLabel);   // above the plot, so no gridline or line crosses it
     svg.append("g").attr("class", "gridline").attr("transform", `translate(${m.l},0)`)
       .call(d3.axisLeft(y).ticks(o.compact ? 4 : 5).tickSize(-(W - m.l - m.r)).tickFormat(""));
     svg.append("g").attr("class", "axis").attr("transform", `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(o.compact ? 4 : 5).tickFormat(o.yFmt).tickSizeOuter(0));
