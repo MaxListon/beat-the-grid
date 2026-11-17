@@ -132,20 +132,33 @@ def _bezier(p0, p1, p2, p3, n=40):
 
 
 def _mark(d: ImageDraw.ImageDraw, x: float, y: float, size: float) -> None:
-    """The logo (docs/favicon.svg): two forecasts racing to one point. The ink line lands on the dot (what
-    actually happened); the orange one, the official forecast, ends just off it. Same 64-unit coordinates."""
+    """The logo (docs/favicon.svg): two forecasts racing to one point. The violet line (my model) lands on the
+    glowing dot, what actually happened; the dim one (the official forecast) ends just off it. 64-unit coordinates."""
     u = size / 64
     P = lambda pts: [(x + px * u, y + py * u) for px, py in pts]  # noqa: E731
-    d.rounded_rectangle([x, y, x + size, y + size], radius=12 * u, fill=VOLT)
+    d.rounded_rectangle([x, y, x + size, y + size], radius=12 * u, fill="#0f0d14")
     official = _bezier((9, 47), (18, 47), (22, 23), (30, 23)) + _bezier((30, 23), (38, 23), (39, 41), (49, 44))
     mine = _bezier((9, 41), (18, 41), (22, 16), (31, 16)) + _bezier((31, 16), (40, 16), (40, 33), (50, 33))
-    for pts, col, wdt in ((official, ORANGE, 5), (mine, INK, 5.5)):
-        d.line(P(pts), fill=col, width=round(wdt * u), joint="curve")
-        for cx, cy in (P(pts)[0], P(pts)[-1]):                        # round caps
-            r = wdt * u / 2
-            d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=col)
+
+    def dot(cx, cy, r, col):
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=col)
+    pts = P(official)
+    d.line(pts, fill="#3d3550", width=round(5 * u), joint="curve")
+    dot(*pts[0], 2.5 * u, "#3d3550"); dot(*pts[-1], 2.5 * u, "#3d3550")
+    pts = P(mine)
+    a, b = (0x6d, 0x3d, 0xf5), (0xd1, 0x6c, 0xff)                       # violet -> fuchsia, left to right
+    x0, x1 = pts[0][0], pts[-1][0]
+    for p0, p1 in zip(pts, pts[1:]):
+        t = ((p0[0] + p1[0]) / 2 - x0) / (x1 - x0)
+        col = tuple(round(a[c] + (b[c] - a[c]) * t) for c in range(3))
+        d.line([p0, p1], fill=col, width=round(5.5 * u))
+        dot(*p1, 2.75 * u, col)
+    dot(*pts[0], 2.75 * u, a)
     cx, cy = P([(51, 33)])[0]
-    d.ellipse([cx - 6.5 * u, cy - 6.5 * u, cx + 6.5 * u, cy + 6.5 * u], fill=INK)
+    for r, alpha in ((13, .12), (10.5, .2), (8.5, .3)):                 # soft glow
+        col = tuple(round(0x0f + (0xd1 - 0x0f) * alpha * f) for f in (1, .55, 1.6))
+        dot(cx, cy, r * u, col)
+    dot(cx, cy, 6 * u, "#f3e9ff")
 
 
 def draw(w: int, h: int) -> Image.Image:
@@ -195,7 +208,7 @@ def build() -> list[Path]:
     out = []
     for size, path in (((1200, 630), SITE_DATA.parent / "og.png"), ((1280, 640), ROOT / ".github" / "media" / "social.png")):
         path.parent.mkdir(parents=True, exist_ok=True)
-        draw(*size).quantize(colors=128, method=Image.Quantize.MEDIANCUT).save(path, optimize=True)
+        draw(*size).save(path, optimize=True)   # full color: a palette drops the logo's purples
         out.append(path)
     return out
 
