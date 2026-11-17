@@ -53,7 +53,7 @@ def build_region(ba: str, eia: pd.DataFrame, wx: pd.DataFrame, target_days: pd.D
     local_start = (full - pd.Timedelta(hours=1)).tz_convert(tz)       # hour-beginning, local
     df["local_date"] = pd.to_datetime(local_start.date)
     df["hour"] = local_start.hour
-    df["dow"] = local_start.dayofweek
+    df["dow"] = local_start.day_of_week
     df["month"] = local_start.month
     doy = local_start.day_of_year
     df["doy_sin"], df["doy_cos"] = np.sin(2 * np.pi * doy / 365.25), np.cos(2 * np.pi * doy / 365.25)

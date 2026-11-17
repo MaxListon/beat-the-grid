@@ -2,6 +2,7 @@
 
 [![Live site](https://img.shields.io/badge/live%20site-maxliston.github.io%2Fbeat--the--grid-1c5cab)](https://maxliston.github.io/beat-the-grid/)
 [![Daily forecast](https://github.com/MaxListon/beat-the-grid/actions/workflows/daily.yml/badge.svg)](https://github.com/MaxListon/beat-the-grid/actions/workflows/daily.yml)
+[![Tests](https://github.com/MaxListon/beat-the-grid/actions/workflows/tests.yml/badge.svg)](https://github.com/MaxListon/beat-the-grid/actions/workflows/tests.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab)](requirements.txt)
 [![License: MIT](https://img.shields.io/badge/license-MIT-555)](LICENSE)
 
@@ -9,7 +10,7 @@
 
 Every day, each US balancing authority (the organization that keeps its region's grid in balance) publishes a day-ahead forecast of hourly electricity demand. This project builds one machine-learning model, gives it **only the information it would have had the morning before**, and scores it against those official forecasts across **34 grid regions**. They cover nearly all US electricity demand. Then it runs live: a new forecast is published every day and committed to this repo **before** the day it predicts.
 
-**Website:** https://maxliston.github.io/beat-the-grid/ · **Write-up:** [WRITEUP.md](WRITEUP.md) · **Every live forecast:** [forecasts/](forecasts/)
+**Website:** https://maxliston.github.io/beat-the-grid/ · **Write-up:** [WRITEUP.md](WRITEUP.md) · **Notebook:** [analysis.ipynb](notebooks/analysis.ipynb) · **Data dictionary:** [DATA.md](DATA.md) · **Every live forecast:** [forecasts/](forecasts/)
 
 [![Beat the Grid website: hero chart of PJM demand, my forecast and the official forecast](.github/media/hero.png)](https://maxliston.github.io/beat-the-grid/)
 
@@ -97,7 +98,7 @@ Every day, each US balancing authority (the organization that keeps its region's
 - **Model.** One global LightGBM model across all regions. It predicts demand as a ratio to the past week's mean, so a 1.6 GW utility and the 94 GW PJM learn from each other. Inputs: recent demand (only what is visible at the cutoff), calendar and holidays, and temperature, humidity, cloud, wind and sunlight forecasts. Quantile models add an 80% prediction interval.
 - **Backtest.** Walk-forward: retrain every quarter on the past only and forecast the next quarter, July 2024 → today. Training data for a test block ends two days before it starts.
 - **Significance.** A Diebold-Mariano test on daily mean absolute percentage error, with Newey-West variance and the Harvey-Leybourne-Newbold correction, then Holm correction across all regions. A region is a **win** or **loss** only if the corrected p < 0.05; otherwise it is a **tie**.
-- **Live.** `models/frozen/` was trained once at launch and is never retuned. `.github/workflows/daily.yml` runs at 12:00 UTC: it scores finished days, issues tomorrow's forecast to `forecasts/YYYY-MM-DD.csv` (never overwritten), and rebuilds the site data.
+- **Live.** `models/frozen/` was trained once at launch and is never retuned. `.github/workflows/daily.yml` runs at 12:00 UTC, with backup runs at 13:30 and 16:00 in case GitHub starts it late: it scores finished days, issues tomorrow's forecast to `forecasts/YYYY-MM-DD.csv` (never overwritten, never before 12:00 UTC), and rebuilds the site data. Package versions are pinned so the frozen model gives the same answer every day, and a failed run opens an issue.
 
 ## Run it
 
@@ -106,7 +107,7 @@ python3 -m venv ~/.venvs/beat-the-grid && source ~/.venvs/beat-the-grid/bin/acti
 pip install -r requirements.txt
 python -m grid.build      # download data, backtest, build site data, freeze the model (~3 h, mostly weather download)
 python -m grid.live       # what the daily job runs
-pytest                    # fairness, statistics and leaderboard tests
+pytest                    # 36 tests: fairness, statistics, live-record rules (also run on every push)
 ```
 
 Raw downloads go to `~/.cache/beat-the-grid` (override with `GRID_CACHE`). On macOS, LightGBM needs `brew install libomp`.
@@ -120,12 +121,31 @@ Full write-up, including what didn't work: [WRITEUP.md](WRITEUP.md).
 - Archived humidity, cloud, wind and sunlight forecasts only start in February 2024, so scoring starts July 2024 (2022–mid-2024 is training only).
 - Live forecasts use the latest weather forecast available at issue time (12–44 h ahead), slightly fresher than the ≥ 48 h forecasts used in the backtest. That makes live results, if anything, a little better than the backtest suggests.
 
+## How it fits together
+
+```mermaid
+flowchart LR
+    EIA["EIA-930<br/>hourly demand +<br/>official forecasts"] --> F
+    WX["Open-Meteo<br/>archived weather<br/>forecasts"] --> F
+    F["features.py<br/>inputs, cut off at<br/>06:00 UTC the day before"] --> BT
+    F --> LIVE
+    BT["backtest.py<br/>walk-forward, retrain<br/>every quarter"] --> EV["evaluate.py + stats.py<br/>errors, Diebold-Mariano,<br/>Holm correction"]
+    EV --> SITE["site_data.py<br/>JSON + Parquet"]
+    FROZEN["models/frozen/<br/>trained once at launch"] --> LIVE
+    LIVE["live.py<br/>daily on GitHub Actions"] --> FC["forecasts/<br/>one CSV per day,<br/>never edited"]
+    LIVE --> SITE
+    SITE --> WEB["docs/<br/>the website"]
+```
+
 ## Repo map
 
 ```
-grid/            pipeline: eia.py, weather.py, features.py, model.py, backtest.py, evaluate.py, stats.py, live.py, site_data.py, build.py
-tests/           fairness (no peeking), statistics, leaderboard logic
+grid/            the pipeline (each file starts with a docstring saying what it does)
+tests/           fairness (no peeking at the future), statistics, live-record rules
+notebooks/       analysis.ipynb: the main findings, step by step in pandas
 forecasts/       every live forecast (one CSV per target day) + live_scores.csv
 models/frozen/   the model used for every live forecast
-docs/            the website (GitHub Pages)
+docs/            the website (GitHub Pages); docs/data/sql/ holds the Parquet tables
+DATA.md          data dictionary: every table and column
+WRITEUP.md       the full write-up, including what didn't work
 ```

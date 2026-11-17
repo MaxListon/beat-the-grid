@@ -1,0 +1,3 @@
+# Extra packages for notebooks/analysis.ipynb (not needed by the daily job)
+matplotlib
+jupyter

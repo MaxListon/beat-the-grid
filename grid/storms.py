@@ -80,8 +80,8 @@ def region_features(ev: pd.DataFrame, target_days: pd.DatetimeIndex) -> pd.DataF
             e = ev[ev.point == name]
             if e.empty:
                 continue
-            b, en = e.begin.values[None, :], e.end.values[None, :]
-            T = issue.values[:, None]
+            b, en = e.begin.dt.tz_convert(None).to_numpy()[None, :], e.end.dt.tz_convert(None).to_numpy()[None, :]
+            T = issue.tz_convert(None).to_numpy()[:, None]
             now += wt * ((b <= T) & (en > T)).any(axis=1)
             recent += wt * ((b <= T) & (en <= T) & (en > T - np.timedelta64(RECENT_H, "h"))).any(axis=1)
         out.append(pd.DataFrame({"ba": ba, "local_date": target_days, "storm_now": now, "storm_recent": recent}))

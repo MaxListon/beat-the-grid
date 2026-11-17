@@ -392,3 +392,19 @@ section.band-dark{
 section.band-dark .takeaway{color:var(--ink2)}
 .live-lb:not(.all) tr.extra{display:none}
 #liveMore{margin:var(--s2) 0 var(--s3)}
+/* Phones: each table row becomes a compact card, so no column hides off-screen */
+@media (max-width:640px){
+  #lb thead,table.lb.live-lb thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  #lb,#lb tbody,table.lb.live-lb,table.lb.live-lb tbody{display:block;min-width:0}
+  #lb tr,table.lb.live-lb tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 12px;padding:12px 4px;border-bottom:1px solid var(--grid)}
+  #lb td,table.lb.live-lb td{display:block;border:0;padding:0;text-align:left;position:static;background:none}
+  #lb td.reg,table.lb.live-lb td.reg{grid-column:1 / 3}
+  #lb td.res{grid-column:3;grid-row:1;justify-self:end;align-self:start}
+  #lb td.trend{display:none}
+  #lb td.diff .impbar{justify-content:flex-start}
+  #lb td.diff svg{display:none}
+  #lb td.num::before,table.lb.live-lb td.num::before{content:attr(data-label);display:block;font-size:11.5px;color:var(--muted);margin-bottom:1px}
+  table.lb.live-lb td.reg{grid-column:1 / -1}
+  #lb tbody tr:hover td:first-child,#lb tbody tr.hl td:first-child{background:none}
+}
+@media (max-width:640px){#sparkNote{display:none}}

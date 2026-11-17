@@ -204,9 +204,9 @@
       const badge = d.suspect_official ? `<span class="badge-r suspect">Not scored</span>`
         : `<span class="badge-r ${VERDICT[d.verdict].cls}">${VERDICT[d.verdict].icon} ${VERDICT[d.verdict].short}</span>`;
       return `<tr data-ba="${d.ba}" tabindex="0" aria-label="${d.name}, open in explorer"><td class="reg"><b>${d.name}</b><span>${d.ba} · ${d.area}</span></td>` +
-        `<td class="num">${gw(d.mean_mw)}</td><td class="num">${pct(d.mape_ours, 2)}</td><td class="num">${pct(d.mape_official, 2)}</td>` +
-        `<td class="num"><span class="impbar" title="${better ? "My error is lower" : "Official error is lower"}">${bar}<span>${label}</span></span></td>` +
-        `<td>${spark(d.monthly)}</td><td>${badge}</td></tr>`;
+        `<td class="num" data-label="Avg demand">${gw(d.mean_mw)}</td><td class="num" data-label="My error">${pct(d.mape_ours, 2)}</td><td class="num" data-label="Official">${pct(d.mape_official, 2)}</td>` +
+        `<td class="num diff" data-label="Difference"><span class="impbar" title="${better ? "My error is lower" : "Official error is lower"}">${bar}<span>${label}</span></span></td>` +
+        `<td class="trend">${spark(d.monthly)}</td><td class="res">${badge}</td></tr>`;
     }).join("") : `<tr><td colspan="7" class="note">No regions match this filter.</td></tr>`;
     $$("#lb thead th[data-k] button").forEach((btn) => btn.addEventListener("click", () => {
       const k = btn.parentElement.dataset.k; sortDir = sortKey === k ? -sortDir : (["name", "verdict", "mape_ours", "mape_official"].includes(k) ? 1 : -1); sortKey = k; renderTable();
@@ -557,7 +557,7 @@
     const won = rows.filter((r) => r.mape_ours < r.mape_official).length;
     el.innerHTML = head + weekHTML(L.week) + calendarHTML(L.by_day || []) + (L.expect && (L.by_day || []).length ? `<div class="expect" id="expectChart"></div>` : "") + `<p class="cap">So far my error is lower in <b>${won} of ${rows.length}</b> regions over ${L.days} live day${L.days > 1 ? "s" : ""}. With only a few weeks of data these numbers are noisy; the backtest is the stronger evidence until the live record grows.</p>` +
       `<div class="table-wrap"><table class="lb live-lb" id="liveTable"><thead><tr><th>Region</th><th class="num">Days</th><th class="num">My error</th><th class="num">Official</th><th class="num">Days I was closer</th></tr></thead><tbody>` +
-      rows.map((r, i) => { const meta = LB.find((x) => x.ba === r.ba) || {}; return `<tr data-ba="${r.ba}" tabindex="0"${i >= 10 ? ' class="extra"' : ""}><td class="reg"><b>${meta.name || r.ba}</b><span>${r.ba}</span></td><td class="num">${r.days}</td><td class="num">${pct(r.mape_ours, 2)}</td><td class="num">${pct(r.mape_official, 2)}</td><td class="num">${r.days_won} of ${r.days}</td></tr>`; }).join("") +
+      rows.map((r, i) => { const meta = LB.find((x) => x.ba === r.ba) || {}; return `<tr data-ba="${r.ba}" tabindex="0"${i >= 10 ? ' class="extra"' : ""}><td class="reg"><b>${meta.name || r.ba}</b><span>${r.ba}</span></td><td class="num" data-label="Days">${r.days}</td><td class="num" data-label="My error">${pct(r.mape_ours, 2)}</td><td class="num" data-label="Official">${pct(r.mape_official, 2)}</td><td class="num" data-label="Days closer">${r.days_won} of ${r.days}</td></tr>`; }).join("") +
       `</tbody></table></div>` +
       (rows.length > 12 ? `<button type="button" class="ghost" id="liveMore" aria-expanded="false" aria-controls="liveTable">Show all ${rows.length} regions</button>` : "") + voidNote(L);
     bindCalendar(el, L.by_day || []);

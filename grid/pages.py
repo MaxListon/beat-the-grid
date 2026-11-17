@@ -15,6 +15,18 @@ BASE = "/beat-the-grid/"
 SITE = "https://maxliston.github.io/beat-the-grid/"
 
 CHANGELOG = [
+    ("live", "2026-11-16", [
+        "First valid live forecast issued for 2026-11-17 (all 34 regions). GitHub started the scheduled job 2 h 43 min late; the 06:00 UTC data cutoff is the same whenever it runs.",
+        "Reliability: two backup runs a day (13:30 and 16:00 UTC), exact package versions pinned so the frozen model gives identical forecasts, and an automatic GitHub issue if a run fails.",
+        "Safeguard: a forecast can no longer be issued before 12:00 UTC on the day before. A manual test run started just after midnight UTC began building the next day's forecast too early; it was cancelled before anything was saved.",
+        "Added 'Live vs the backtest' (each live day against the backtest's normal range) and an automatic weekly summary. Both appear once days are scored.",
+    ]),
+    ("site", "2026-11-16", [
+        "One color scheme throughout: blue for my model, orange for the operators (the map and result tags used green and red).",
+        "Shorter tables with 'Show all', readable dates, a larger hero chart, a dark band for the live record, and table rows that become cards on phones.",
+        "Fixed menu links landing short of their section, and stale cache stamps on the site's scripts.",
+        "On GitHub: tests now run on every push, a data dictionary (DATA.md), an analysis notebook, and a v1.0 release with the frozen model.",
+    ]),
     ("live", "2026-11-15", [
         "Launch: first live forecast issued 12:01 UTC for 2026-11-16.",
         "Bug found within the hour: the live job read demand only from EIA's bulk files (over a day behind) and only 45 days of history, so four demand inputs the model always had in the backtest were blank. The 2026-11-16 forecast was voided before the day began, kept unchanged in the log, and is not scored.",
