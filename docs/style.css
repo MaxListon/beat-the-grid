@@ -364,3 +364,15 @@ footer a{color:var(--muted)}
 .storm-note{margin-top:var(--s4)}
 .storm-note ul{margin:0 0 var(--s3);padding-left:1.2em}
 .storm-note li{margin:4px 0}
+/* live: this week + live vs backtest */
+.week{background:var(--page);border:1px solid var(--ring);border-radius:var(--r);padding:var(--s4);margin:0 0 var(--s4)}
+.week h3{margin:0 0 6px;font-size:17px}
+.week h3 span{font-weight:500;color:var(--ink2);font-size:14px;margin-left:6px}
+.week p{margin:0 0 6px;font-size:15px;color:var(--ink2)}
+.week p:last-child{margin:0}
+.week b{color:var(--ink)}
+.expect{margin:0 0 var(--s4)}
+.expect svg{display:block;width:100%;height:auto;overflow:visible}
+.expect g.day:focus{outline:none}
+.expect g.day:focus circle{stroke:var(--ink)}
+.sw.dash{width:18px;height:0;border-radius:0;border-top:2px dashed var(--ours)}

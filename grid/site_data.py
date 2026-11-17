@@ -80,6 +80,7 @@ def build_from_backtest() -> dict:
     _dump("peaks.json", pk)
     head["peaks"] = pk["headline"]
     sql_data.build(d, lb)
+    _dump("expect.json", backtest_daily_range())
     lw = blend.latest_weights(d)
     _dump("blend.json", {"dayparts": blend.DAYPARTS,
                          "weights": {ba: {int(r.daypart): r.w_mine for r in g.itertuples()} for ba, g in lw.groupby("ba")}})
@@ -215,6 +216,9 @@ def build_live(eia: pd.DataFrame, scores: pd.DataFrame) -> None:
                                     "days_won": int((g.mape_ours < g.mape_official).sum()),
                                     "coverage_80": g.in_80.mean(), "p_value": p})
         live["by_day"] = daily_record(scores)
+        live["week"] = weekly_summary(scores)
+    if (SITE_DATA / "expect.json").exists():
+        live["expect"] = json.loads((SITE_DATA / "expect.json").read_text())
     issued = live_files(FORECASTS)
     live["latest_issued"] = issued[-1].stem if issued else None
     why = live_files(FORECASTS, "20??-??-??.why.json")
@@ -230,8 +234,7 @@ def build_live(eia: pd.DataFrame, scores: pd.DataFrame) -> None:
 def daily_record(scores: pd.DataFrame) -> list[dict]:
     """One row per live day for the track-record calendar: demand-weighted error of both sides over the
     regions in the headline contest (same weights and exclusions as the backtest headline)."""
-    lb = pd.DataFrame(json.loads((SITE_DATA / "leaderboard.json").read_text()))
-    fair = lb[~lb.suspect_official].set_index("ba").mean_mw
+    fair = _fair_weights()
     s = scores[scores.ba.isin(fair.index)].assign(w=lambda x: x.ba.map(fair))
     out = []
     for date, g in s.groupby("date"):
@@ -239,6 +242,55 @@ def daily_record(scores: pd.DataFrame) -> list[dict]:
         out.append({"date": date, "regions": int(len(g)), "regions_won": int((g.mape_ours < g.mape_official).sum()),
                     "mape_ours": float((g.mape_ours * w).sum()), "mape_official": float((g.mape_official * w).sum())})
     return out
+
+
+def _fair_weights() -> pd.Series:
+    lb = pd.DataFrame(json.loads((SITE_DATA / "leaderboard.json").read_text()))
+    return lb[~lb.suspect_official].set_index("ba").mean_mw
+
+
+def backtest_daily_range() -> dict:
+    """What a normal day looked like in the backtest, measured exactly like a live day: the
+    demand-weighted mean of each headline region's daily error. The live chart draws live days
+    against this range, so a reader can see whether the live record matches what the backtest promised."""
+    fair = _fair_weights()
+    h = pd.read_parquet(SITE_DATA / "sql" / "hourly.parquet", columns=["region", "local_date", "actual_mw", "official_mw", "ours_mw"])
+    h = h[h.region.isin(fair.index) & (h.actual_mw > 0)].dropna()
+    h = h.assign(o=(h.ours_mw - h.actual_mw).abs() / h.actual_mw, f=(h.official_mw - h.actual_mw).abs() / h.actual_mw)
+    rd = h.groupby(["local_date", "region"]).agg(n=("o", "size"), o=("o", "mean"), f=("f", "mean")).reset_index()
+    rd = rd[rd.n >= 23].assign(w=lambda x: x.region.map(fair))
+    rd = rd.assign(ow=rd.o * rd.w, fw=rd.f * rd.w)
+    g = rd.groupby("local_date").agg(ow=("ow", "sum"), fw=("fw", "sum"), w=("w", "sum"), n=("w", "size"))
+    g = g[g.n >= 0.8 * len(fair)]
+    o, f = g.ow / g.w, g.fw / g.w
+    q = lambda s: {k: float(s.quantile(v)) for k, v in (("p10", .1), ("p50", .5), ("p90", .9))}  # noqa: E731
+    return {"days": int(len(g)), "ours": q(o), "official": q(f), "share_days_won": float((o < f).mean())}
+
+
+def weekly_summary(scores: pd.DataFrame, days: int = 7) -> dict | None:
+    """'This week' in plain numbers: the last seven scored days, who won, and the biggest miss.
+    Needs at least three scored days; before that a summary would say more about noise than skill."""
+    dates = sorted(scores.date.unique())[-days:]
+    if len(dates) < 3:
+        return None
+    fair = _fair_weights()
+    s = scores[scores.date.isin(dates) & scores.ba.isin(fair.index)].assign(w=lambda x: x.ba.map(fair))
+    w = s.w / s.w.sum()
+    per_day = pd.DataFrame(daily_record(s))
+    reg = s.groupby("ba").agg(o=("mape_ours", "mean"), f=("mape_official", "mean"))
+    worst = s.loc[s.mape_ours.idxmax()]
+    best = (reg.f - reg.o).idxmax()
+    why_file = FORECASTS / f"{worst.date}.why.json"
+    why = json.loads(why_file.read_text().replace("NaN", "null")).get("regions", {}).get(worst.ba, {}) if why_file.exists() else {}
+    return {
+        "start": dates[0], "end": dates[-1], "days": len(dates),
+        "mape_ours": float((s.mape_ours * w).sum()), "mape_official": float((s.mape_official * w).sum()),
+        "days_won": int((per_day.mape_ours < per_day.mape_official).sum()),
+        "regions_won": int((reg.o < reg.f).sum()), "regions": int(len(reg)),
+        "worst": {"ba": worst.ba, "date": worst.date, "mape_ours": float(worst.mape_ours),
+                  "mape_official": float(worst.mape_official), "temp_vs_last_week_c": why.get("temp_vs_last_week_c")},
+        "best": {"ba": best, "mape_ours": float(reg.o[best]), "mape_official": float(reg.f[best])},
+    }
 
 
 SITE = "https://maxliston.github.io/beat-the-grid/"

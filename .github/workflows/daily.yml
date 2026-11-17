@@ -3,13 +3,20 @@ name: Daily forecast
 # Every day at 12:00 UTC (4 am Pacific / 7 am Eastern): score past forecasts, issue tomorrow's
 # forecast with the frozen model, refresh the website data, and commit. The commit timestamp
 # is public proof that each forecast existed before the day it predicts.
+#
+# GitHub sometimes starts scheduled jobs hours late or skips them, so two backup runs follow.
+# They are harmless when the main run worked: an issued forecast is never overwritten, and the
+# data cutoff (06:00 UTC) is the same whenever the job runs. If a run fails, an issue is opened.
 on:
   schedule:
     - cron: "0 12 * * *"
+    - cron: "30 13 * * *"
+    - cron: "0 16 * * *"
   workflow_dispatch: {}
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: daily-forecast
@@ -36,5 +43,17 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add forecasts docs/data
           if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
-          git commit -m "Forecast issued $(date -u +%Y-%m-%dT%H:%MZ)"
+          msg="Daily update"; git diff --cached --name-only | grep -qE "^forecasts/20..-..-..\.csv$" && msg="Forecast issued"
+          git commit -m "$msg $(date -u +%Y-%m-%dT%H:%MZ)"
           git push
+      - name: Open an issue if the run failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          title="Daily forecast run failed"
+          open=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
+          if [ -n "$open" ]; then gh issue comment "$open" --body "Failed again: $url"
+          else gh issue create --title "$title" --body "The daily job failed: $url. Tomorrow's forecast may not have been issued; check before the day begins."; fi
