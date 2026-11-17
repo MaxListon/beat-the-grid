@@ -23,6 +23,8 @@ CHANGELOG = [
     ]),
     ("site", "2026-11-16", [
         "New editorial design: Newsreader headlines with IBM Plex text and data labels (all self-hosted), numbered sections, and a live ticker of each region's forecast.",
+        "New: 'Can you beat the model?', a game where you draw your own forecast for a real past day and get scored against my model and the grid operator.",
+        "Charts now label their own key points (best and worst hours and months, the live forecast's peak), a short 'Why I built this' note, and a 404 page that has lost power.",
         "New logo in violet and black: two forecasts racing to one point. The violet line (my model) lands on the glowing dot, what actually happened; the dim one (the official forecast) ends just off it.",
         "One color scheme throughout: blue for my model, orange for the operators (the map and result tags used green and red).",
         "Shorter tables with 'Show all', readable dates, a larger hero chart, a dark band for the live record, and table rows that become cards on phones.",
@@ -51,6 +53,64 @@ CHANGELOG = [
         "Privacy policy, terms, contact form with validation and spam protection, printable write-up and PDF.",
     ]),
 ]
+
+# The 404 page is a small joke: the page has "lost power". A flashlight follows the cursor over the dark page; the
+# message and the "Restore power" button are always lit, so nothing depends on finding them. Touch screens and
+# reduced-motion visitors get the page with the lights on.
+BLACKOUT_HEAD = """<style>
+body.blackout-page{background:#0b0a09}
+.blackout{position:relative;min-height:68vh;display:grid;place-items:center;text-align:center;padding:72px 0;isolation:isolate}
+.blackout .lit{position:relative;z-index:3}
+.blackout .code{font-family:var(--mono);font-size:13px;letter-spacing:.04em;color:#f5c518;margin:0 0 14px}
+.blackout h1{color:#f2ede3;max-width:none;margin:0 auto 14px;font-size:clamp(40px,7vw,84px)}
+.blackout .lede{color:#cbc3b5;margin:0 auto 28px;max-width:46ch}
+.blackout .power{display:inline-flex;align-items:center;gap:10px;background:#f5c518;color:#191612;font-weight:600;padding:12px 22px;border-radius:2px;text-decoration:none;box-shadow:0 0 0 6px rgba(245,197,24,.15),0 0 40px rgba(245,197,24,.35)}
+.blackout .power::before{content:"";width:10px;height:10px;border-radius:50%;background:#c9412f;box-shadow:0 0 8px #c9412f}
+.blackout .hidden-room{position:absolute;inset:0;z-index:1;pointer-events:none;color:#efe9dc}
+.blackout .hidden-room span{position:absolute;font-family:var(--serif);font-style:italic;font-size:19px;opacity:.9}
+.blackout .hidden-room a{pointer-events:auto;color:#f5c518}
+.blackout .mask{position:absolute;inset:-40px -100vw;z-index:2;pointer-events:none;
+  background:radial-gradient(circle 150px at var(--x,50%) var(--y,40%),rgba(11,10,9,0) 0,rgba(11,10,9,.15) 55%,rgba(11,10,9,.97) 100%)}
+.blackout.on .mask{opacity:0;transition:opacity .5s}
+.blackout.on{animation:flicker .6s steps(1) 1}
+@keyframes flicker{0%{filter:brightness(.4)}20%{filter:brightness(1.6)}35%{filter:brightness(.6)}55%{filter:brightness(1.3)}100%{filter:none}}
+@media (hover:none),(prefers-reduced-motion:reduce){.blackout .mask{display:none}.blackout.on{animation:none}}
+body.blackout-page .topnav{background:#0b0a09;border-bottom-color:#2b2620}
+body.blackout-page .brand,body.blackout-page .navlinks a:not(.navcta){color:#cbc3b5}
+body.blackout-page #themeBtn{display:none}
+body.blackout-page footer{border-top-color:#2b2620;background:#0b0a09}
+</style>
+"""
+BLACKOUT_BODY = """<div class="blackout" id="blackout">
+  <div class="hidden-room" aria-hidden="true">
+    <span style="left:6%;top:14%">the grid is fine</span>
+    <span style="right:7%;top:20%">only this page is out</span>
+    <span style="left:10%;bottom:16%">try <a href="{BASE}#game" tabindex="-1">the forecasting game</a></span>
+    <span style="right:9%;bottom:12%">or <a href="{BASE}#live" tabindex="-1">tomorrow's forecast</a></span>
+  </div>
+  <div class="mask"></div>
+  <div class="lit">
+    <p class="code">ERROR 404 · OUTAGE REPORTED</p>
+    <h1>This page lost power.</h1>
+    <p class="lede">The page you're looking for doesn't exist or has moved. Everything else is still on the grid. Move your cursor to look around.</p>
+    <a class="power" id="power" href="{BASE}">Restore power</a>
+  </div>
+</div>
+<script>
+(function () {
+  document.body.classList.add("blackout-page");
+  var el = document.getElementById("blackout"), mask = el.querySelector(".mask");
+  el.addEventListener("pointermove", function (e) {
+    var r = mask.getBoundingClientRect();
+    mask.style.setProperty("--x", (e.clientX - r.left) + "px"); mask.style.setProperty("--y", (e.clientY - r.top) + "px");
+  });
+  document.getElementById("power").addEventListener("click", function (e) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    e.preventDefault(); el.classList.add("on");
+    var href = this.href; setTimeout(function () { location.href = href; }, 650);
+  });
+})();
+</script>"""
 
 
 def page(fname: str, title: str, desc: str, body: str, index: bool = True, canonical: bool = True, extra_head: str = "") -> None:
@@ -124,10 +184,11 @@ def main() -> None:
     for fname, title, desc, kw in [
         ("privacy.html", "Privacy Policy", "What Beat the Grid collects (almost nothing), why, and your choices.", {}),
         ("terms.html", "Terms of Use", "Terms for using Beat the Grid, its forecasts and its code.", {}),
-        ("404.html", "Page not found", "This page doesn't exist.", {"index": False, "canonical": False}),
         ("thanks.html", "Message sent", "Thanks for getting in touch.", {"index": False}),
     ]:
         page(fname, title, desc, existing_body(fname), **kw)
+    page("404.html", "Page not found", "This page doesn't exist.", BLACKOUT_BODY.replace("{BASE}", BASE),
+         index=False, canonical=False, extra_head=BLACKOUT_HEAD)
     page("changelog.html", "Changelog", "Every change to the Beat the Grid model, method and website.", changelog_body())
     page("writeup.html", "Write-up", "The full Beat the Grid write-up: question, data, rules, method, results, failures and limits.", writeup_body())
     print("pages built")

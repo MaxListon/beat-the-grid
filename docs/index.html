@@ -29,7 +29,7 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preload" href="data/summary.json" as="fetch" crossorigin>
-<link rel="stylesheet" href="style.css?v=d1621d9010">
+<link rel="stylesheet" href="style.css?v=66d1200007">
 <script>document.documentElement.classList.add("js");</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Beat the Grid","url":"https://maxliston.github.io/beat-the-grid/",
@@ -46,7 +46,7 @@
     <a class="brand" href="#top"><img src="favicon.svg" width="22" height="22" alt=""> Beat the Grid</a>
     <span class="pill" id="statusPill" role="status"><i class="sdot"></i><span>Loading status…</span></span>
     <div class="navlinks">
-      <a href="#scoreboard">Results</a><a href="#explore">Explore</a><a href="#peaks">Peaks</a><a href="#sql">SQL</a><a href="#method">Method</a><a class="navcta" href="#contact">Contact</a>
+      <a href="#scoreboard">Results</a><a href="#explore">Explore</a><a href="#game">Play</a><a href="#peaks">Peaks</a><a href="#sql">SQL</a><a href="#method">Method</a><a class="navcta" href="#contact">Contact</a>
     </div>
     <button id="themeBtn" class="ghost" aria-label="Switch between light and dark theme">Theme</button>
   </div>
@@ -54,9 +54,9 @@
 
 <aside class="toc" aria-label="On this page">
   <p>On this page</p>
-  <a href="#top">Overview</a><a href="#scoreboard">Scoreboard</a><a href="#results">Region by region</a><a href="#explore">Explore a region</a>
+  <a href="#top">Overview</a><a href="#scoreboard">Scoreboard</a><a href="#results">Region by region</a><a href="#explore">Explore a region</a><a href="#game">Your turn</a>
   <a href="#when">When it wins</a><a href="#peaks">The peak contest</a><a href="#together">Better together</a><a href="#misses">Where it failed</a><a href="#live">Live record</a><a href="#sql">Query the data</a>
-  <a href="#method">Method</a><a href="#contact">Contact</a>
+  <a href="#method">Method</a><a href="#why">Why I built this</a><a href="#contact">Contact</a>
 </aside>
 
 <header class="hero" id="top">
@@ -155,7 +155,30 @@
   </div>
 </section>
 
-<section id="when">
+<section id="game">
+  <div class="wrap">
+    <p class="kicker">Your turn</p>
+    <h2>Can you beat the model?</h2>
+    <p class="takeaway">Here is real electricity demand from the days before. <b>Draw the next 24 hours</b> with your mouse or finger, then see how your forecast did against my model and the grid operator's.</p>
+    <div class="card game">
+      <div class="game-bar">
+        <label class="field-inline" for="gameRegion">Region<select id="gameRegion"></select></label>
+        <div class="game-day"><span class="game-day-label">Forecast this day</span><b id="gameDay">–</b></div>
+        <div class="game-tools">
+          <button class="ghost" id="gameHelp" type="button">Start from the day before</button>
+          <button class="ghost" id="gameNew" type="button">Another day</button>
+        </div>
+      </div>
+      <div class="series-legend" id="gameLegend"></div>
+      <div id="gameChart" class="chart game-chart" aria-describedby="gameHint"><div class="skel skel-block"></div></div>
+      <p class="cap" id="gameHint">Drag across the shaded day to draw your forecast. You can redraw any part.</p>
+      <div class="game-actions"><button class="btn" id="gameReveal" type="button" disabled>Reveal what happened</button><span class="game-record" id="gameRecord"></span></div>
+      <div id="gameResult" class="game-result" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section id="when" class="alt">
   <div class="wrap">
     <p class="kicker">When it wins</p>
     <h2>Strong overnight, beaten at the evening peak</h2>
@@ -174,7 +197,7 @@
   </div>
 </section>
 
-<section id="peaks" class="alt">
+<section id="peaks">
   <div class="wrap">
     <p class="kicker">The peak contest</p>
     <h2>Who calls the daily peak better?</h2>
@@ -193,7 +216,7 @@
   </div>
 </section>
 
-<section id="together">
+<section id="together" class="alt">
   <div class="wrap">
     <p class="kicker">Better together</p>
     <h2>The best forecast uses both</h2>
@@ -208,7 +231,7 @@
   </div>
 </section>
 
-<section id="misses" class="alt">
+<section id="misses">
   <div class="wrap">
     <p class="kicker">Where it failed</p>
     <h2>The ten worst days, explained</h2>
@@ -296,7 +319,19 @@
   </div>
 </section>
 
-<section id="contact" class="alt">
+<section id="why" class="alt">
+  <div class="wrap">
+    <p class="kicker">Why I built this</p>
+    <div class="why-note">
+      <p class="why-lede">Every US grid operator publishes a forecast of tomorrow's electricity demand, and the government makes all of it public. I wanted to know how good those forecasts really are, and whether one carefully built model, held to the information it would really have had, could match them.</p>
+      <p>The answer turned out more interesting than yes or no. My model wins where most electricity is used and loses in many smaller regions. It is weakest on the busiest days, which are the ones that matter most. And it is most useful <em>alongside</em> the operators' forecast, not instead of it.</p>
+      <p>I've tried to show all of that, including the days it failed badly. The part I'm proudest of is the live record: every forecast is published before the day begins and never edited, which is the one thing a backtest can't fake.</p>
+      <p class="why-sign">Maxwell Liston</p>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
   <div class="wrap contact">
     <div>
       <p class="kicker">Contact</p>
@@ -337,7 +372,7 @@
 <script src="contact.js?v=7475b973ea" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" defer></script>
-<script src="app.js?v=21cdaf3f6d" defer></script>
+<script src="app.js?v=696b9d894a" defer></script>
 <script type="module" src="sql.js?v=8e488f8717"></script>
 </body>
 </html>

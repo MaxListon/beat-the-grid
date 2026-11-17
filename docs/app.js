@@ -282,6 +282,15 @@
         .attr("stroke-linejoin", "round").attr("stroke-linecap", "round");
       if (o.animate) { const len = p.node().getTotalLength(); p.attr("class", "draw").style("--len", len).style("animation-delay", `${j * 0.25}s`); }
     });
+    (o.notes || []).forEach((n) => {
+      if (n.v == null || n.i == null) return;
+      const px = x(X[n.i]), py = y(n.v), up = py - m.t > 46, ty = up ? py - 30 : py + 38;
+      const anchor = px > W * 0.72 ? "end" : px < W * 0.28 ? "start" : "middle";
+      const g = svg.append("g").attr("class", "note-mark").attr("aria-hidden", "true");
+      g.append("circle").attr("cx", px).attr("cy", py).attr("r", 7).attr("fill", "none").attr("stroke", "var(--ink)").attr("stroke-width", 1.5);
+      g.append("line").attr("x1", px).attr("x2", px).attr("y1", up ? py - 8 : py + 8).attr("y2", up ? ty + 6 : ty - 16).attr("stroke", "var(--ink)").attr("stroke-width", 1);
+      g.append("text").attr("class", "lbl anno").attr("x", px).attr("y", ty).attr("text-anchor", anchor).text(n.text);
+    });
     const cross = svg.append("line").attr("y1", m.t).attr("y2", H - m.b).attr("stroke", css("--axis")).style("display", "none");
     const dots = o.series.map((s) => svg.append("circle").attr("r", 4).attr("fill", s.color).attr("stroke", css("--surface")).attr("stroke-width", 2).style("display", "none"));
     svg.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b).attr("fill", "transparent")
@@ -301,11 +310,17 @@
     const liveIdx = s.live.map((v, i) => (v && s.actual[i] == null ? i : -1)).filter((i) => i >= 0);
     const shade = liveIdx.length ? [X[liveIdx[0]], X[liveIdx[liveIdx.length - 1]]] : null;
     const mw = (v) => (v == null ? "–" : d3.format(",.0f")(v) + " MW");
+    let shadeLabel = null;
+    if (shade) {
+      const pk = liveIdx[d3.maxIndex(liveIdx, (i) => s.p50[i] ?? -Infinity)];
+      const hourStr = new Intl.DateTimeFormat("en-US", { hour: "numeric", timeZone: tz }).format(new Date(+X[pk] - 36e5)).replace(" ", "\u00a0").toLowerCase();
+      shadeLabel = s.p50[pk] != null ? `live forecast · peak ${gw(s.p50[pk])} at ${hourStr}` : "live forecast";
+    }
     lineChart(el, {
       label: opt.label, animate: opt.animate, compact: opt.compact,
       x: X, xScale: d3.scaleTime().domain(d3.extent(X)), xFmt: (t) => fmtDay.format(t), xTicks: opt.compact ? 4 : 7,
       yFmt: (v) => (v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1) + " GW" : v + " MW"),
-      band: { lo: s.p10, hi: s.p90 }, shade, shadeLabel: shade ? "live forecast" : null,
+      band: { lo: s.p10, hi: s.p90 }, shade, shadeLabel,
       series: [{ values: s.official, color: css("--official") }, { values: s.p50, color: css("--ours") }, { values: s.actual, color: css("--actual") }],
       tip: (i) => `<div class="t">${fmtFull.format(X[i])}</div>` + row("Actual", mw(s.actual[i]), css("--actual")) +
         row("My forecast", mw(s.p50[i]), css("--ours")) + row("My 80% range", s.p10[i] == null ? "–" : `${d3.format(",.0f")(s.p10[i])}–${d3.format(",.0f")(s.p90[i])}`) +
@@ -365,6 +380,161 @@
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  /* ---------- "Can you beat the model?": draw the next 24 hours, then compare with my model and the operator ---------- */
+  const GAME_REGIONS = ["PJM", "MISO", "ERCO", "SWPP", "CISO", "NYIS", "ISNE", "FPL"];
+  const game = { ba: "PJM", s: null, day: null, guess: null, revealed: false, used: new Set() };
+  const gameRecord = () => { try { return JSON.parse(localStorage.getItem("btg-game") || "{}"); } catch (e) { return {}; } };
+  function saveRecord(r) { try { localStorage.setItem("btg-game", JSON.stringify(r)); } catch (e) { /* private mode: no record */ } }
+  function showRecord() {
+    const r = gameRecord();
+    $("#gameRecord").textContent = r.played ? `Your record: ${r.played} day${r.played > 1 ? "s" : ""} played, beat my model ${r.beatMine || 0}, beat the operator ${r.beatOfficial || 0}` : "";
+  }
+  // Complete local days (midnight to midnight in the region's time zone) with actual, official and my forecast for all
+  // 24 hours, three full days of history before them, and nothing from the live forecast.
+  function gameDays(s, tz) {
+    const hourOf = (t) => +new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: tz }).format(new Date(+t - 36e5));
+    const days = [];
+    for (let i = 72; i + 24 <= s.t.length; i++) {
+      if (hourOf(s.t[i]) !== 0) continue;
+      let ok = true;
+      for (let j = i - 72; j < i + 24 && ok; j++) ok = s.actual[j] != null && !s.live[j] && (j < i || (s.official[j] != null && s.p50[j] != null));
+      if (ok) days.push(i);
+    }
+    return days;
+  }
+  async function newGame(ba) {
+    game.ba = ba || game.ba;
+    const raw = await loadSeries(game.ba), el = $("#gameChart");
+    if (!raw) { fail(el, "this region"); return; }
+    game.s = expand(raw);
+    const tz = (window.REGION_TZ || {})[game.ba];
+    let days = gameDays(game.s, tz);
+    const fresh = days.filter((i) => !game.used.has(game.ba + i));
+    if (!days.length) { el.innerHTML = `<p class="load-error">No complete day to play in this region right now.</p>`; return; }
+    if (fresh.length) days = fresh; else game.used.clear();
+    game.day = days[Math.floor(Math.random() * days.length)];
+    game.used.add(game.ba + game.day);
+    game.guess = new Array(24).fill(null);
+    game.revealed = false;
+    const start = new Date(+game.s.t[game.day] - 36e5);
+    $("#gameDay").textContent = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: tz }).format(start);
+    $("#gameResult").innerHTML = "";
+    $("#gameReveal").disabled = true;
+    $("#gameReveal").hidden = false;
+    $("#gameHint").textContent = "Drag across the shaded day to draw your forecast. You can redraw any part.";
+    drawGame();
+  }
+  function drawGame() {
+    const el = $("#gameChart"), s = game.s, C = (el.clientWidth || 700) < 560 ? 24 : 72;   // phones: one day of history, so the day to draw is wide enough
+    const d0 = game.day - C, d1 = game.day + 24;
+    const tz = (window.REGION_TZ || {})[game.ba];
+    el.innerHTML = "";
+    const W = el.clientWidth || 700, H = el.clientHeight || 340, m = { t: 26, r: 14, b: 30, l: 54 };
+    const idx = d3.range(d0, d1);
+    const ctx = idx.slice(0, C).map((i) => s.actual[i]);
+    const seen = game.revealed ? idx.slice(C).flatMap((i) => [s.actual[i], s.official[i], s.p50[i]]) : [];
+    const mine = game.guess.filter((v) => v != null);
+    const lo = d3.min([...ctx, ...seen, ...mine]), hi = d3.max([...ctx, ...seen, ...mine]), span = hi - lo;
+    const y = d3.scaleLinear().domain([lo - span * 0.25, hi + span * 0.25]).nice().range([H - m.b, m.t]);
+    const x = d3.scaleLinear().domain([d0, d1 - 1]).range([m.l, W - m.r]);
+    const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img")
+      .attr("aria-label", `${C / 24 === 1 ? "A day" : "Three days"} of ${game.ba} demand, then the day to forecast`);
+    svg.append("rect").attr("x", x(game.day - 0.5)).attr("width", x(d1 - 1) - x(game.day - 0.5)).attr("y", m.t).attr("height", H - m.t - m.b).attr("fill", css("--live"));
+    svg.append("text").attr("class", "lbl anno").attr("text-anchor", "end").attr("x", x(d1 - 1)).attr("y", m.t - 8).text(game.revealed ? "how it went" : "your forecast goes here");
+    svg.append("g").attr("class", "gridline").attr("transform", `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(""));
+    svg.append("g").attr("class", "axis").attr("transform", `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat((v) => d3.format(",.0f")(v / 1000) + " GW"));
+    const dayTicks = idx.filter((i) => +new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: tz }).format(new Date(+s.t[i] - 36e5)) === 0);
+    const fmt = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: tz });
+    svg.append("g").attr("class", "axis").attr("transform", `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(x).tickValues(dayTicks).tickFormat((i) => fmt.format(new Date(+s.t[i] - 36e5))));
+    const line = (vals, from) => d3.line().defined((v) => v != null).x((v, k) => x(from + k)).y((v) => y(v)).curve(d3.curveMonotoneX)(vals);
+    svg.append("path").attr("d", line(ctx, d0)).attr("fill", "none").attr("stroke", css("--actual")).attr("stroke-width", 2);
+    if (game.revealed) {
+      const tgt = (k) => idx.slice(C).map((i) => s[k][i]);
+      [["official", css("--official"), 2], ["p50", css("--ours"), 2.2], ["actual", css("--actual"), 2.6]].forEach(([k, c, w]) => {
+        const p = svg.append("path").attr("d", line(tgt(k), game.day)).attr("fill", "none").attr("stroke", c).attr("stroke-width", w);
+        if (!reduceMotion) { const L = p.node().getTotalLength(); p.attr("stroke-dasharray", L).attr("stroke-dashoffset", L).transition().duration(900).attr("stroke-dashoffset", 0); }
+      });
+    }
+    // the visitor's forecast, in the logo's violet
+    svg.append("path").attr("class", "guess").attr("d", line(game.guess, game.day)).attr("fill", "none").attr("stroke", "var(--you)").attr("stroke-width", 3).attr("stroke-linecap", "round");
+    svg.selectAll("circle.g").data(game.guess.map((v, k) => [v, k]).filter((p) => p[0] != null)).join("circle").attr("class", "g")
+      .attr("cx", (p) => x(game.day + p[1])).attr("cy", (p) => y(p[0])).attr("r", 2.5).attr("fill", "var(--you)");
+    if (game.revealed) return;
+    // drawing surface over the target day
+    const pad = svg.append("rect").attr("class", "game-pad").attr("x", x(game.day - 0.5)).attr("width", x(d1 - 1) - x(game.day - 0.5) + m.r)
+      .attr("y", 0).attr("height", H).attr("fill", "transparent");
+    let last = null;
+    const put = (ev) => {
+      const [px, py] = d3.pointer(ev, svg.node());
+      const k = Math.max(0, Math.min(23, Math.round(x.invert(px) - game.day))), v = Math.max(y.domain()[0], Math.min(y.domain()[1], y.invert(py)));
+      if (last && last.k !== k) {                                       // fill hours skipped by a fast stroke
+        const step = k > last.k ? 1 : -1;
+        for (let j = last.k + step; j !== k; j += step) game.guess[j] = last.v + (v - last.v) * (j - last.k) / (k - last.k);
+      }
+      game.guess[k] = v; last = { k, v };
+      svg.select("path.guess").attr("d", line(game.guess, game.day));
+      svg.selectAll("circle.g").data(game.guess.map((g, j) => [g, j]).filter((p) => p[0] != null)).join("circle").attr("class", "g")
+        .attr("cx", (p) => x(game.day + p[1])).attr("cy", (p) => y(p[0])).attr("r", 2.5).attr("fill", "var(--you)");
+      const n = game.guess.filter((g) => g != null).length;
+      $("#gameReveal").disabled = n < 18;
+      $("#gameHint").textContent = n < 18 ? `${n} of 24 hours drawn. Draw at least 18 (gaps are filled in for you).` : "Ready. Redraw any part, or reveal what happened.";
+    };
+    pad.on("pointerdown", (ev) => { ev.preventDefault(); pad.node().setPointerCapture(ev.pointerId); last = null; put(ev); })
+      .on("pointermove", (ev) => { if (ev.buttons || ev.pointerType === "touch") { if (pad.node().hasPointerCapture(ev.pointerId)) put(ev); } })
+      .on("pointerup pointercancel", () => { last = null; });
+  }
+  function fillGaps(g) {
+    const known = g.map((v, k) => [k, v]).filter((p) => p[1] != null);
+    return g.map((v, k) => {
+      if (v != null) return v;
+      const a = known.filter((p) => p[0] < k).pop(), b = known.find((p) => p[0] > k);
+      return a && b ? a[1] + (b[1] - a[1]) * (k - a[0]) / (b[0] - a[0]) : (a || b)[1];
+    });
+  }
+  function reveal() {
+    const s = game.s, idx = d3.range(game.day, game.day + 24);
+    game.guess = fillGaps(game.guess);
+    game.revealed = true;
+    const err = (vals) => d3.mean(idx, (i, k) => Math.abs(vals[k] - s.actual[i]) / s.actual[i]);
+    const you = err(game.guess), mine = err(idx.map((i) => s.p50[i])), off = err(idx.map((i) => s.official[i]));
+    const beatMine = you < mine, beatOff = you < off;
+    const verdict = beatMine && beatOff ? "You beat both. That's a better forecast than a grid operator's, made in a few seconds."
+      : beatOff ? "You beat the grid operator! My model still did better."
+      : beatMine ? "You beat my model, but not the grid operator."
+      : "The forecasters win this one. Try another day.";
+    const r = gameRecord();
+    saveRecord({ played: (r.played || 0) + 1, beatMine: (r.beatMine || 0) + (beatMine ? 1 : 0), beatOfficial: (r.beatOfficial || 0) + (beatOff ? 1 : 0) });
+    showRecord();
+    const score = (label, v, cls) => `<div class="game-score ${cls}"><b>${pct(v, 1)}</b><span>${label}</span></div>`;
+    $("#gameResult").innerHTML = `<p class="game-verdict">${verdict}</p><div class="game-scores">` +
+      score("your error", you, "you") + score("my model", mine, "mine") + score("grid operator", off, "off") + `</div>` +
+      `<p class="note">Average error over the 24 hours. My model only knew demand up to 06:00 UTC the day before, plus a weather forecast; you saw the days before it.</p>`;
+    $("#gameReveal").hidden = true;
+    $("#gameHint").textContent = "The line that continues the history is what actually happened. Try another day or another region.";
+    drawGame();
+  }
+  function renderGame() {
+    const sel = $("#gameRegion");
+    sel.innerHTML = GAME_REGIONS.map((ba) => { const m = LB.find((d) => d.ba === ba) || {}; return `<option value="${ba}">${m.name || ba}</option>`; }).join("");
+    $("#gameLegend").innerHTML = `<span class="key"><i class="sw line" style="background:var(--you)"></i>Your forecast</span>` +
+      `<span class="key"><i class="sw line" style="background:${css("--actual")}"></i>Actual</span>` +
+      `<span class="key"><i class="sw line" style="background:${css("--ours")}"></i>My model</span>` +
+      `<span class="key"><i class="sw line" style="background:${css("--official")}"></i>Grid operator</span>`;
+    sel.addEventListener("change", () => newGame(sel.value));
+    $("#gameNew").addEventListener("click", () => newGame());
+    $("#gameReveal").addEventListener("click", reveal);
+    $("#gameHelp").addEventListener("click", () => {
+      if (game.revealed || !game.s) return;
+      game.guess = d3.range(24).map((k) => game.s.actual[game.day - 24 + k]);
+      $("#gameReveal").disabled = false;
+      $("#gameHint").textContent = "Filled with the day before. Drag to adjust any hours, then reveal.";
+      drawGame();
+    });
+    showRecord();
+    newGame("PJM");
+  }
+
   /* ---------- live ticker: tomorrow's forecast for every region, scrolling under a pause button ---------- */
   function renderTicker() {
     const el = $("#ticker"), W = window.WHY;
@@ -416,7 +586,9 @@
     $$(".legend2").forEach((el) => { el.innerHTML = legend2; });
     const hr = (h) => (h === 0 ? "midnight" : h < 12 ? h + " am" : h === 12 ? "noon" : h - 12 + " pm");
     if (H.length) {
+      const hedge = H.map((r) => r.ape_official - r.ape_ours), hb = d3.maxIndex(hedge), hw = d3.minIndex(hedge);
       lineChart($("#hourChart"), {
+        notes: [{ i: hb, v: H[hb].ape_ours, text: "my best hour" }].concat(hedge[hw] < 0 ? [{ i: hw, v: H[hw].ape_official, text: "operators' edge" }] : []),
         label: "Average forecast error by local hour of day, my model versus the official forecast. Values in the tooltip and caption.",
         x: H.map((r) => r.hour), xScale: d3.scaleLinear().domain([0, 23]), xFmt: (h) => (h === 0 ? "12a" : h < 12 ? h + "a" : h === 12 ? "12p" : h - 12 + "p"),
         yFmt: (v) => (v * 100).toFixed(1) + "%", yZero: true,
@@ -432,7 +604,9 @@
     }
     if (M.length) {
       const X = M.map((r) => new Date(r.month + "-15"));
+      const medge = M.map((r) => r.ape_official - r.ape_ours), mb = d3.maxIndex(medge), mw_ = d3.minIndex(medge);
       lineChart($("#monthChart"), {
+        notes: [{ i: mb, v: M[mb].ape_ours, text: "my best month" }].concat(medge[mw_] < 0 ? [{ i: mw_, v: M[mw_].ape_ours, text: "my worst month" }] : []),
         label: "Average forecast error by month, my model versus the official forecast.",
         x: X, xScale: d3.scaleTime().domain(d3.extent(X)), xFmt: d3.timeFormat("%b %y"), xTicks: 6,
         yFmt: (v) => (v * 100).toFixed(1) + "%", yZero: true,
@@ -693,6 +867,7 @@
   const LAZY = {
     results: () => { renderMap(); renderTable(); },
     explore: () => renderExplorer(),
+    game: () => { if (!game.init) { game.init = true; renderGame(); } else if (game.s) drawGame(); },
     when: () => renderWhen(),
     peaks: () => renderPeaks(),
     together: () => renderBlend(),
@@ -766,7 +941,7 @@
     scrollSpy(); observeReveal(); bindAnchors();
     document.addEventListener("themechange", renderAll);
     let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => {
-      renderHeroChart(); if (drawn.has("explore")) renderExplorer(); if (drawn.has("when")) renderWhen(); if (drawn.has("peaks")) renderPeaks(); }, 200); });
+      renderHeroChart(); if (drawn.has("explore")) renderExplorer(); if (drawn.has("when")) renderWhen(); if (drawn.has("peaks")) renderPeaks(); if (game.s) drawGame(); }, 200); });
   }
   boot().catch((e) => {
     console.error(e);

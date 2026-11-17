@@ -19,7 +19,7 @@
   --ours:#2a6fd0; --ours-band:rgba(42,111,208,.16); --official:#e2612a; --actual:#191612; --ours-text:#1b4f97; --official-text:#a1401a;
   --good:#1f8a3b; --good-text:#1d6b33; --bad:#c9412f; --tie:#8a8375; --warn:#a86d00; --mid:#e3dccb;
   --live:rgba(42,111,208,.08);
-  --volt:#f5c518; --hl:rgba(245,197,24,.55); --paper-line:rgba(25,22,18,.055);
+  --volt:#f5c518; --you:#7a3cff; --hl:rgba(245,197,24,.55); --paper-line:rgba(25,22,18,.055);
   --shadow:none;
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:88px;
   --r-sm:3px; --r:3px; --r-lg:4px;
@@ -33,7 +33,7 @@
     --ours:#4b8fe8; --ours-band:rgba(75,143,232,.22); --official:#ec7440; --actual:#f2ede3; --ours-text:#8ab4f0; --official-text:#f39a70;
     --good:#3fb15f; --good-text:#62c47c; --bad:#e2705f; --tie:#8a8375; --warn:#e0a526; --mid:#2a2620;
     --live:rgba(75,143,232,.10);
-    --volt:#f5c518; --hl:rgba(245,197,24,.28); --paper-line:rgba(242,237,227,.05);
+    --volt:#f5c518; --you:#b18cff; --hl:rgba(245,197,24,.28); --paper-line:rgba(242,237,227,.05);
   }
 }
 :root[data-theme="dark"]{
@@ -44,7 +44,7 @@
   --ours:#4b8fe8; --ours-band:rgba(75,143,232,.22); --official:#ec7440; --actual:#f2ede3; --ours-text:#8ab4f0; --official-text:#f39a70;
   --good:#3fb15f; --good-text:#62c47c; --bad:#e2705f; --tie:#8a8375; --warn:#e0a526; --mid:#2a2620;
   --live:rgba(75,143,232,.10);
-  --volt:#f5c518; --hl:rgba(245,197,24,.28); --paper-line:rgba(242,237,227,.05);
+  --volt:#f5c518; --you:#b18cff; --hl:rgba(245,197,24,.28); --paper-line:rgba(242,237,227,.05);
 }
 
 /* ---- base ---- */
@@ -549,3 +549,30 @@ h2{max-width:24ch}
 .navcta,.navcta:hover{color:#191612!important}
 .ticker a.tk-item{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 22px}
 .ticker .tk-pause{min-width:40px}
+/* "Can you beat the model?" */
+.game-bar{display:flex;flex-wrap:wrap;gap:var(--s3) var(--s5);align-items:flex-end;margin-bottom:var(--s3)}
+.game-day{display:flex;flex-direction:column;gap:2px}
+.game-day-label{font-family:var(--mono);font-size:11.5px;letter-spacing:.03em;color:var(--muted);text-transform:uppercase}
+.game-day b{font-family:var(--serif);font-size:24px;font-weight:600;line-height:1.1}
+.game-tools{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.chart.game-chart{height:360px;touch-action:none;user-select:none;-webkit-user-select:none}
+.game-pad{cursor:crosshair}
+.game-actions{display:flex;flex-wrap:wrap;gap:var(--s4);align-items:center;margin-top:var(--s2)}
+.game-record{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.game-result{margin-top:var(--s4)}
+.game-verdict{font-family:var(--serif);font-size:clamp(22px,2.6vw,30px);font-weight:600;line-height:1.2;margin:0 0 var(--s4);max-width:30ch}
+.game-scores{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3);max-width:640px}
+.game-score{border-top:3px solid var(--ink);padding-top:var(--s2)}
+.game-score b{display:block;font-family:var(--serif);font-size:34px;font-weight:600;line-height:1.1}
+.game-score span{font-size:13.5px;color:var(--ink2)}
+.game-score.you{border-top-color:var(--you)}.game-score.mine{border-top-color:var(--ours)}.game-score.off{border-top-color:var(--official)}
+@media (max-width:640px){.chart.game-chart{height:300px}.game-tools{margin-left:0}.game-score b{font-size:26px}}
+[hidden]{display:none!important}
+.note-mark text,.lbl.anno{paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+/* Why I built this */
+.why-note{max-width:64ch}
+.why-note p{font-size:clamp(17px,1.8vw,19px);line-height:1.6;color:var(--ink2);margin:0 0 var(--s4)}
+.why-note .why-lede{font-family:var(--serif);font-size:clamp(24px,2.8vw,32px);line-height:1.3;color:var(--ink);font-weight:500}
+.why-note em{font-style:italic;color:var(--ink)}
+.why-sign{font-family:var(--serif);font-style:italic;font-size:22px!important;color:var(--ink)!important;margin-top:var(--s5)!important}
+.why-sign::before{content:"— "}
