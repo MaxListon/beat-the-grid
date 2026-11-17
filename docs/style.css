@@ -546,3 +546,6 @@ h2{max-width:24ch}
 .hero{padding-top:var(--s7)}
 .findings li{grid-template-columns:118px 1fr}
 @media (max-width:640px){.findings li{grid-template-columns:96px 1fr}.findings b{font-size:26px}.ticker .tk-day{display:none}.ticker .tk-label{padding:0 10px}}
+.navcta,.navcta:hover{color:#191612!important}
+.ticker a.tk-item{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 22px}
+.ticker .tk-pause{min-width:40px}
