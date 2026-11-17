@@ -1,13 +1,13 @@
 /* Start-up and navigation: loads the data, draws sections lazily as they approach, and makes in-page jumps land exactly. */
-import { st } from "./state.js?v=45fc8122f9";
-import { $, $$, copyText, fail, reduceMotion } from "./util.js?v=45fc8122f9";
-import { renderFindings, renderHeroChart, renderScoreboard, renderStatus, renderTicker, renderVersion } from "./overview.js?v=45fc8122f9";
-import { renderMap, renderTable, setFilter, toggleTable } from "./regions.js?v=45fc8122f9";
-import { downloadCSV, renderCompare, renderExplorer, renderFindGrid, savedBA, select, syncView, viewFromHash, viewLink } from "./explorer.js?v=45fc8122f9";
-import { bindGlossary, glossify } from "./glossary.js?v=45fc8122f9";
-import { drawGame, game, renderGame } from "./game.js?v=45fc8122f9";
-import { renderBlend, renderMisses, renderPeaks, renderWhen, togglePeaks } from "./analysis.js?v=45fc8122f9";
-import { renderLive } from "./live.js?v=45fc8122f9";
+import { st } from "./state.js?v=f618dea0d4";
+import { $, $$, copyText, fail, reduceMotion } from "./util.js?v=f618dea0d4";
+import { renderFindings, renderHeroChart, renderLiveStrip, renderScoreboard, renderStatus, renderTicker, renderVersion } from "./overview.js?v=f618dea0d4";
+import { renderMap, renderTable, setFilter, toggleTable } from "./regions.js?v=f618dea0d4";
+import { downloadCSV, renderCompare, renderExplorer, renderFindGrid, savedBA, select, syncView, viewFromHash, viewLink } from "./explorer.js?v=f618dea0d4";
+import { bindGlossary, glossify } from "./glossary.js?v=f618dea0d4";
+import { drawGame, game, renderGame } from "./game.js?v=f618dea0d4";
+import { renderBlend, renderMisses, renderPeaks, renderWhen, togglePeaks } from "./analysis.js?v=f618dea0d4";
+import { renderLive } from "./live.js?v=f618dea0d4";
 
 /* ---------- page behaviour: side menu, reveal ---------- */
 export function scrollSpy() {
@@ -84,7 +84,7 @@ export function bindAnchors() {
   if (location.hash) requestAnimationFrame(() => jumpTo(location.hash, false));
 }
 export function renderAll() {
-  renderStatus(); renderVersion(); renderFindings(); renderScoreboard(); renderHeroChart();
+  renderStatus(); renderVersion(); renderFindings(); renderLiveStrip(); renderScoreboard(); renderHeroChart();
   st.drawn.forEach((id) => LAZY[id]());
 }
 export async function boot() {

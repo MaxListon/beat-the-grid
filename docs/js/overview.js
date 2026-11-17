@@ -1,8 +1,8 @@
 /* The top of the page: status pill, version badges, hero findings and chart, scoreboard and the live ticker. */
-import { st } from "./state.js?v=45fc8122f9";
-import { $, MINUS, fail, fd, gw, pct, reduceMotion, relDay } from "./util.js?v=45fc8122f9";
-import { drawSeries, expand, legendHTML, loadSeries, slice } from "./charts.js?v=45fc8122f9";
-import { select } from "./explorer.js?v=45fc8122f9";
+import { st } from "./state.js?v=f618dea0d4";
+import { $, MINUS, fail, fd, gw, pct, reduceMotion, relDay } from "./util.js?v=f618dea0d4";
+import { drawSeries, expand, legendHTML, loadSeries, slice } from "./charts.js?v=f618dea0d4";
+import { select } from "./explorer.js?v=f618dea0d4";
 
 /* ---------- status pill + version ---------- */
 export function renderStatus() {
@@ -35,6 +35,24 @@ export function renderFindings() {
     [`${h.wins}–${h.losses}`, `wins and losses across ${h.regions_fair} regions, ${h.ties} ties. The operators win more regions, and the site shows where.`],
   ];
   $("#findings").innerHTML = items.map(([b, t]) => `<li><b>${b}</b><span>${t}</span></li>`).join("");
+}
+/* Live record strip: the out-of-sample score, above the fold. Days are scored about two days after they end. */
+export function renderLiveStrip() {
+  const el = $("#liveStrip"), L = st.LIVE || {};
+  if (!el || !L.forecasts_issued) return;
+  const days = L.by_day || [];
+  const day = (d) => d3.utcFormat("%b %-d")(new Date(d + "T12:00:00Z"));
+  let text;
+  if (days.length) {
+    const avg = (k) => d3.mean(days, (d) => d[k]), won = days.filter((d) => d.mape_ours < d.mape_official).length;
+    text = `<b>Live record:</b> closer on ${won} of ${days.length} day${days.length > 1 ? "s" : ""}, ${pct(avg("mape_ours"), 2)} vs ${pct(avg("mape_official"), 2)} official error`;
+  } else {
+    const due = L.first_issued ? d3.utcDay.offset(new Date(L.first_issued + "T12:00:00Z"), 2) : null;
+    const when = due && due > new Date() ? `first scores due ${day(due.toISOString().slice(0, 10))}` : "first scores coming soon";
+    text = `<b>Live now:</b> ${L.forecasts_issued} forecast${L.forecasts_issued > 1 ? "s" : ""} published, ${when}`;
+  }
+  el.innerHTML = `<i class="sdot" aria-hidden="true"></i><span class="txt">${text}</span><span class="arr" aria-hidden="true">→</span>`;
+  el.hidden = false;
 }
 export async function renderHeroChart() {
   const el = $("#heroChart"), ba = "PJM";

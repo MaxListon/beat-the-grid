@@ -8,6 +8,8 @@
 
 **Can one open model forecast tomorrow's electricity demand better than America's grid operators?**
 
+[![20-second tour of the website: the live record, finding your grid region, and drawing your own forecast to play against the model](.github/media/demo.gif)](https://maxliston.github.io/beat-the-grid/)
+
 ### The project in 30 seconds
 
 | | |
@@ -21,8 +23,6 @@
 Every day, each US balancing authority (the organization that keeps its region's grid in balance) publishes a day-ahead forecast of hourly electricity demand. This project builds one machine-learning model, gives it **only the information it would have had the morning before**, and scores it against those official forecasts across **34 grid regions**. They cover nearly all US electricity demand. Then it runs live: a new forecast is published every day and committed to this repo **before** the day it predicts.
 
 **Website:** https://maxliston.github.io/beat-the-grid/ · **Write-up:** [WRITEUP.md](WRITEUP.md) · **Notebook:** [analysis.ipynb](notebooks/analysis.ipynb) · **Data dictionary:** [DATA.md](DATA.md) · **Every live forecast:** [forecasts/](forecasts/)
-
-[![Beat the Grid website: hero chart of PJM demand, my forecast and the official forecast](.github/media/hero.png)](https://maxliston.github.io/beat-the-grid/)
 
 | The peak contest | Query the data yourself (SQL in the browser) |
 |---|---|

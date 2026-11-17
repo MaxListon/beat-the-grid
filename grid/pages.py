@@ -15,6 +15,9 @@ BASE = "/beat-the-grid/"
 SITE = "https://maxliston.github.io/beat-the-grid/"
 
 CHANGELOG = [
+    ("site", "2026-11-17", [
+        "The live record now shows at the top of the page: forecasts published and, once days are scored, how often the model was closer than the operators.",
+    ]),
     ("live", "2026-11-16", [
         "First valid live forecast issued for 2026-11-17 (all 34 regions). GitHub started the scheduled job 2 h 43 min late; the 06:00 UTC data cutoff is the same whenever it runs.",
         "Reliability: two backup runs a day (13:30 and 16:00 UTC), exact package versions pinned so the frozen model gives identical forecasts, and an automatic GitHub issue if a run fails.",

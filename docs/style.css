@@ -636,3 +636,16 @@ select{font-size:15px}
 .follow{font-size:14px}
 table.heat:not(.all) tr.extra{display:none}
 #blendMore{margin-top:var(--s3)}
+
+/* Live record strip in the hero: the out-of-sample score, one line, links down to the full record */
+.live-strip{display:inline-grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin:0 0 var(--s5);padding:8px 14px;border:1px solid var(--ink);border-left:4px solid var(--brand);background:var(--surface);color:var(--ink);text-decoration:none;font-size:14.5px;line-height:1.35;max-width:100%}
+.live-strip[hidden]{display:none}
+.live-strip b{font-weight:650}
+.live-strip .txt{color:var(--ink2)}
+.live-strip b{color:var(--ink)}
+.live-strip .sdot{background:var(--good);animation:pulse 2.4s infinite}
+.live-strip .arr{color:var(--brand);transition:transform .15s}
+.live-strip:hover{border-color:var(--brand)}
+.live-strip:hover .arr{transform:translateX(3px)}
+.live-strip:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.live-strip .sdot{animation:none}.live-strip .arr{transition:none}}

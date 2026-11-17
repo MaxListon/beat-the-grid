@@ -1,8 +1,8 @@
 /* 'Can you beat the model?': draw the next 24 hours of a real past day, then compare with my model and the operator. */
-import { st } from "./state.js?v=45fc8122f9";
-import { $, copyText, css, fail, gw, pct, reduceMotion } from "./util.js?v=45fc8122f9";
-import { expand, loadSeries } from "./charts.js?v=45fc8122f9";
-import { savedBA } from "./explorer.js?v=45fc8122f9";
+import { st } from "./state.js?v=f618dea0d4";
+import { $, copyText, css, fail, gw, pct, reduceMotion } from "./util.js?v=f618dea0d4";
+import { expand, loadSeries } from "./charts.js?v=f618dea0d4";
+import { savedBA } from "./explorer.js?v=f618dea0d4";
 
 /* ---------- "Can you beat the model?": draw the next 24 hours, then compare with my model and the operator ---------- */
 export const GAME_LIST = () => st.LB.filter((d) => !d.suspect_official).sort((a, b) => b.mean_mw - a.mean_mw).map((d) => d.ba);

@@ -27,7 +27,7 @@ before(async () => {
 });
 after(async () => { await browser?.close(); server?.kill(); });
 
-async function open(path = "", { width = 1366, dark = false } = {}) {
+async function open(path = "", { width = 1366, dark = false, live = null } = {}) {
   const p = await browser.newPage();
   const phone = width < 600;
   await p.setViewport({ width, height: phone ? 844 : 900, isMobile: phone, hasTouch: phone });
@@ -35,6 +35,10 @@ async function open(path = "", { width = 1366, dark = false } = {}) {
   await p.evaluateOnNewDocument(() => { try { localStorage.setItem("btg-notice", "1"); } catch (e) { /* ignore */ } });
   p.errors = [];
   p.on("pageerror", (e) => p.errors.push(e.message));
+  if (live) {                                                          // swap in a stand-in live.json
+    await p.setRequestInterception(true);
+    p.on("request", (r) => (r.url().includes("/data/live.json") ? r.respond({ status: 200, contentType: "application/json", body: JSON.stringify(live) }) : r.continue()));
+  }
   await p.goto(BASE + path, { waitUntil: "networkidle0" });
   await wait(600);
   return p;
@@ -43,6 +47,22 @@ async function done(p) { const errs = p.errors; await p.close(); assert.deepEqua
 const topOf = (p, id) => p.evaluate((id) => Math.round(document.getElementById(id).getBoundingClientRect().top), id);
 
 describe("navigation", () => {
+  test("hero live strip shows the live record and links down to it", async () => {
+    let p = await open();
+    const strip = await p.$eval("#liveStrip", (e) => ({ hidden: e.hidden, text: e.textContent }));
+    assert.equal(strip.hidden, false);
+    assert.match(strip.text, /Live (now|record)/);
+    await p.click("#liveStrip");
+    await wait(1500);
+    assert.ok(Math.abs(await topOf(p, "live")) < 90, "jump lands on the live record");
+    await done(p);
+    // once days are scored it shows the running score instead
+    const by_day = [["2026-11-17", 0.030, 0.035], ["2026-11-18", 0.040, 0.033]].map(([date, o, f]) => ({ date, regions: 31, regions_won: 15, mape_ours: o, mape_official: f }));
+    p = await open("", { live: { forecasts_issued: 3, first_issued: "2026-11-17", latest_issued: "2026-11-19", days: 2, start_date: "2026-11-17", regions: [], by_day, voided: [], updated_at: "2026-11-19 13:00 UTC" } });
+    assert.match(await p.$eval("#liveStrip", (e) => e.textContent), /Live record: closer on 1 of 2 days, 3\.50% vs 3\.40% official error/);
+    await done(p);
+  });
+
   test("menu links land exactly on their section (after lazy charts draw)", async () => {
     const p = await open();
     for (const id of ["peaks", "sql", "live", "results"]) {

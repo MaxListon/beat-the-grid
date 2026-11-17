@@ -222,6 +222,7 @@ def build_live(eia: pd.DataFrame, scores: pd.DataFrame) -> None:
         live["expect"] = json.loads((SITE_DATA / "expect.json").read_text())
     issued = live_files(FORECASTS)
     live["latest_issued"] = issued[-1].stem if issued else None
+    live["first_issued"] = issued[0].stem if issued else None   # first scored-to-be day (voided days excluded)
     why = live_files(FORECASTS, "20??-??-??.why.json")
     # Older files may contain NaN (not valid JSON); normalise to null on the way to the website
     (SITE_DATA / "why.json").write_text(why[-1].read_text().replace("NaN", "null") if why else '{"target":null,"regions":{}}')

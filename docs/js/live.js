@@ -1,7 +1,7 @@
 /* The live record: track-record calendar, live versus backtest, weekly summary, region table and voided forecasts. */
-import { st } from "./state.js?v=45fc8122f9";
-import { $, css, fd, hideTip, pct, row, showTip } from "./util.js?v=45fc8122f9";
-import { goExplore } from "./regions.js?v=45fc8122f9";
+import { st } from "./state.js?v=f618dea0d4";
+import { $, css, fd, hideTip, pct, row, showTip } from "./util.js?v=f618dea0d4";
+import { goExplore } from "./regions.js?v=f618dea0d4";
 
 /* ---------- live ---------- */
 export function voidNote(L) {
