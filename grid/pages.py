@@ -22,6 +22,7 @@ CHANGELOG = [
         "Added 'Live vs the backtest' (each live day against the backtest's normal range) and an automatic weekly summary. Both appear once days are scored.",
     ]),
     ("site", "2026-11-16", [
+        "New editorial design: Newsreader headlines with IBM Plex text and data labels (all self-hosted), numbered sections, and a live ticker of each region's forecast.",
         "One color scheme throughout: blue for my model, orange for the operators (the map and result tags used green and red).",
         "Shorter tables with 'Show all', readable dates, a larger hero chart, a dark band for the live record, and table rows that become cards on phones.",
         "Fixed menu links landing short of their section, and stale cache stamps on the site's scripts.",
@@ -69,7 +70,8 @@ def page(fname: str, title: str, desc: str, body: str, index: bool = True, canon
 <link rel="icon" href="{BASE}favicon.svg" type="image/svg+xml">
 <link rel="icon" href="{BASE}favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="{BASE}apple-touch-icon.png">
-<link rel="preload" href="{BASE}fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{BASE}fonts/newsreader-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{BASE}fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{BASE}style.css">
 {extra_head}</head>
 <body>

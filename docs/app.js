@@ -8,6 +8,8 @@
   const pct = (x, d = 1) => (x == null || isNaN(x) ? "–" : (x * 100).toFixed(d) + "%");
   const gw = (mw) => (mw == null ? "–" : (mw >= 10000 ? (mw / 1000).toFixed(0) : (mw / 1000).toFixed(1)) + " GW");
   const MINUS = "−";
+  const isoLocal = (d) => d.toLocaleDateString("en-CA");          // YYYY-MM-DD in the visitor's time zone
+  const relDay = (iso) => { const t = new Date(); if (iso === isoLocal(t)) return "Today"; t.setDate(t.getDate() + 1); return iso === isoLocal(t) ? "Tomorrow" : ""; };
   // "2026-11-17" -> "Nov 17, 2026" (or "Nov 17"); dates are calendar days, so format in UTC at noon
   const fd = (iso, year = true) => (iso ? d3.utcFormat(year ? "%b %-d, %Y" : "%b %-d")(new Date(String(iso).slice(0, 10) + "T12:00:00Z")) : "–");
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -78,7 +80,7 @@
     const end = all.t.length, start = Math.max(0, (liveIdx >= 0 ? liveIdx : end) - 72);
     const sl = slice(all, start, end);
     const hasLive = sl.live.some(Boolean);
-    $("#heroSub").textContent = `Largest US grid · last 3 days${hasLive ? " + tomorrow's live forecast" : ""}`;
+    $("#heroSub").textContent = `Largest US grid · last 3 days${hasLive ? " + the live forecast" : ""}`;
     $("#heroLegend").innerHTML = legendHTML(true);
     drawSeries(el, sl, ba, { animate: !reduceMotion, compact: true, label: `PJM hourly electricity demand over the last three days, with my forecast and the official forecast${hasLive ? ", plus tomorrow's live forecast" : ""}.` });
   }
@@ -262,7 +264,7 @@
     const y = d3.scaleLinear().domain(o.yZero ? [0, ext[1] + pad] : [ext[0] - pad, ext[1] + pad]).nice().range([H - m.b, m.t]);
     if (o.shade) svg.append("rect").attr("x", x(o.shade[0])).attr("width", Math.max(0, x(o.shade[1]) - x(o.shade[0])))
       .attr("y", m.t).attr("height", H - m.b - m.t).attr("fill", css("--live"));
-    if (o.shade && o.shadeLabel) svg.append("text").attr("class", "lbl").attr("text-anchor", "end").attr("x", x(o.shade[1])).attr("y", m.t - 9).text(o.shadeLabel);   // above the plot, so no gridline or line crosses it
+    if (o.shade && o.shadeLabel) svg.append("text").attr("class", "lbl anno").attr("text-anchor", "end").attr("x", x(o.shade[1])).attr("y", m.t - 8).text(o.shadeLabel);   // above the plot, so no gridline or line crosses it
     svg.append("g").attr("class", "gridline").attr("transform", `translate(${m.l},0)`)
       .call(d3.axisLeft(y).ticks(o.compact ? 4 : 5).tickSize(-(W - m.l - m.r)).tickFormat(""));
     svg.append("g").attr("class", "axis").attr("transform", `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(o.compact ? 4 : 5).tickFormat(o.yFmt).tickSizeOuter(0));
@@ -303,7 +305,7 @@
       label: opt.label, animate: opt.animate, compact: opt.compact,
       x: X, xScale: d3.scaleTime().domain(d3.extent(X)), xFmt: (t) => fmtDay.format(t), xTicks: opt.compact ? 4 : 7,
       yFmt: (v) => (v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1) + " GW" : v + " MW"),
-      band: { lo: s.p10, hi: s.p90 }, shade, shadeLabel: shade ? "Tomorrow (live)" : null,
+      band: { lo: s.p10, hi: s.p90 }, shade, shadeLabel: shade ? "live forecast" : null,
       series: [{ values: s.official, color: css("--official") }, { values: s.p50, color: css("--ours") }, { values: s.actual, color: css("--actual") }],
       tip: (i) => `<div class="t">${fmtFull.format(X[i])}</div>` + row("Actual", mw(s.actual[i]), css("--actual")) +
         row("My forecast", mw(s.p50[i]), css("--ours")) + row("My 80% range", s.p10[i] == null ? "–" : `${d3.format(",.0f")(s.p10[i])}–${d3.format(",.0f")(s.p90[i])}`) +
@@ -363,6 +365,28 @@
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  /* ---------- live ticker: tomorrow's forecast for every region, scrolling under a pause button ---------- */
+  function renderTicker() {
+    const el = $("#ticker"), W = window.WHY;
+    if (!el || !W || !W.target || !W.regions || !Object.keys(W.regions).length) return;
+    const hr = (h) => (h === 0 ? "12 am" : h < 12 ? h + " am" : h === 12 ? "12 pm" : h - 12 + " pm");
+    const rows = Object.entries(W.regions).sort((a, b) => b[1].avg_mw - a[1].avg_mw);
+    const item = ([ba, r]) => {
+      const v = r.vs_last_week, cls = v >= 0 ? "up" : "dn";
+      return `<a class="tk-item" href="#explore" data-ba="${ba}"><b>${ba}</b> ${gw(r.avg_mw)} avg · peak ${gw(r.peak_mw)} at ${hr(r.peak_hour)} ` +
+        `<span class="${cls}">${v >= 0 ? "▲" : "▼"} ${Math.abs(v * 100).toFixed(1)}%</span></a>`;
+    };
+    const list = rows.map(item).join("");
+    const day = d3.utcFormat("%a %b %-d")(new Date(W.target + "T12:00:00Z"));
+    el.innerHTML = `<span class="tk-label">${relDay(W.target) || "Live forecast"}<span class="tk-day"> · ${day}</span></span>` +
+      `<div class="tk-view"><div class="tk-track" style="--tk-dur:${Math.max(40, rows.length * 4)}s"><div class="tk-set">${list}</div><div class="tk-set" aria-hidden="true">${list.replace(/<a /g, '<a tabindex="-1" ')}</div></div></div>` +
+      `<button type="button" class="tk-pause" aria-pressed="false" aria-label="Pause the ticker">❚❚</button>`;
+    el.hidden = false;
+    const btn = el.querySelector(".tk-pause");
+    btn.addEventListener("click", () => { const on = el.classList.toggle("paused"); btn.setAttribute("aria-pressed", String(on)); btn.textContent = on ? "▶" : "❚❚"; btn.setAttribute("aria-label", on ? "Play the ticker" : "Pause the ticker"); });
+    el.querySelectorAll("a[data-ba]").forEach((a) => a.addEventListener("click", () => { select(a.dataset.ba); $("#regionSel").value = a.dataset.ba; }));
+  }
+
   /* ---------- tomorrow: why ---------- */
   function renderWhy() {
     const el = $("#whyCard"), W = window.WHY, r = W && W.regions && W.regions[selected];
@@ -372,7 +396,7 @@
     const max = d3.max(Object.values(r.drivers), Math.abs) || 0.01;
     const sign = (v) => (v >= 0 ? "+" : MINUS) + Math.abs(v * 100).toFixed(1) + "%";
     const dT = r.temp_vs_last_week_c;
-    el.innerHTML = `<h3>Tomorrow, ${d3.utcFormat("%A %b %-d")(new Date(W.target + "T12:00:00Z"))} <span class="live-tag">Live forecast</span></h3><div class="facts">` +
+    el.innerHTML = `<h3>${[relDay(W.target), d3.utcFormat("%A %b %-d")(new Date(W.target + "T12:00:00Z"))].filter(Boolean).join(", ")} <span class="live-tag">Live forecast</span></h3><div class="facts">` +
       `<span>Average <b>${gw(r.avg_mw)}</b> (${sign(r.vs_last_week)} vs last week)</span>` +
       `<span>Peak <b>${gw(r.peak_mw)}</b> around ${hr(r.peak_hour)}</span>` +
       (r.max_temp_c == null ? "" : `<span>Hottest hour <b>${r.max_temp_c.toFixed(0)}°C / ${(r.max_temp_c * 9 / 5 + 32).toFixed(0)}°F</b>${dT == null ? "" : ` (${dT >= 0 ? "+" : MINUS}${Math.abs(dT).toFixed(1)}°C vs a week earlier)`}</span>`) + `</div>` +
@@ -694,7 +718,7 @@
     const target = hash && hash.length > 1 && document.getElementById(decodeURIComponent(hash.slice(1)));
     if (!target) return false;
     drawUpTo(target);
-    $$(".reveal:not(.in)").forEach((el) => { if (isBefore(el, target)) el.classList.add("in"); });
+    $$(".reveal:not(.in)").forEach((el) => { if (isBefore(el, target) || target.contains(el)) el.classList.add("in"); });
     target.scrollIntoView({ behavior: smooth && !reduceMotion ? "smooth" : "auto" });
     return true;
   }
@@ -737,6 +761,7 @@
     selected = (LB.find((d) => d.ba === "ERCO") || LB[0]).ba;
     $("#regionSel").value = selected;
     renderAll();
+    renderTicker();
     lazyRender();
     scrollSpy(); observeReveal(); bindAnchors();
     document.addEventListener("themechange", renderAll);

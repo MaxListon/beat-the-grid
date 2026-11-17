@@ -24,11 +24,12 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/newsreader-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preload" href="data/summary.json" as="fetch" crossorigin>
-<link rel="stylesheet" href="style.css?v=b4db0ff0a8">
+<link rel="stylesheet" href="style.css?v=a2119abd9a">
 <script>document.documentElement.classList.add("js");</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Beat the Grid","url":"https://maxliston.github.io/beat-the-grid/",
@@ -38,6 +39,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
+<div class="ticker" id="ticker" role="region" aria-label="Tomorrow's live forecast, region by region" hidden></div>
 
 <nav class="topnav" aria-label="Main">
   <div class="wrap navrow">
@@ -61,13 +63,13 @@
   <div class="wrap hero-grid">
     <div class="hero-copy">
       <p class="eyebrow">Open forecasting contest · 34 US grid regions</p>
-      <h1>Can an open model out-forecast America's grid operators?</h1>
+      <h1>Can an open model <em>out-forecast</em> America's grid operators?</h1>
       <p class="lede">Every day, each US grid operator predicts tomorrow's electricity demand. I built one model, held it to the information it would really have had, and scored it against them hour by hour. Then I put it live.</p>
       <ul class="findings" id="findings">
         <li class="skel-line"></li><li class="skel-line"></li><li class="skel-line"></li>
       </ul>
       <div class="cta-row">
-        <a class="btn" href="#explore">See tomorrow's live forecast</a>
+        <a class="btn" href="#explore">See the live forecast</a>
         <a class="secondary" href="writeup.html">Read the write-up</a>
       </div>
       <p class="badge-row" id="versionBadge"></p>
@@ -324,7 +326,8 @@
 </main>
 
 <footer><div class="wrap">
-  <span>Built by Maxwell Liston · <span id="updated"></span></span>
+  <p class="signoff">Built from public data by Maxwell Liston. <em>Forecasts are published before the day begins, and never edited.</em></p>
+  <span class="updated" id="updated"></span>
   <nav aria-label="Footer"><a href="writeup.html">Write-up</a><a href="changelog.html">Changelog</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="https://github.com/MaxListon/beat-the-grid">Code</a></nav>
 </div></footer>
 <div id="tip" class="tip" role="tooltip" hidden></div>
@@ -334,7 +337,7 @@
 <script src="contact.js?v=7475b973ea" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" defer></script>
-<script src="app.js?v=8c22ba9225" defer></script>
+<script src="app.js?v=21cdaf3f6d" defer></script>
 <script type="module" src="sql.js?v=8e488f8717"></script>
 </body>
 </html>
