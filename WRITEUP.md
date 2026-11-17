@@ -58,10 +58,18 @@ Three of the model's ten worst days were **Hurricanes Milton and Helene** (Octob
 - **Zero-filled weather:** missing 2022–23 humidity, cloud, wind and sunlight values were first averaged as 0. I caught it, fixed it, and covered it with tests.
 
 ## Live
-The model was frozen on 2026-11-15. A GitHub Action publishes tomorrow's forecast every day at 12:00 UTC and commits it before the day begins, with a "what pushed it up or down" explanation from the model's SHAP values. Each finished day is scored automatically and added to a public track-record calendar, next to the backtest numbers, so anyone can see whether the backtest held up.
+The model was frozen on 2026-11-15 (published as the [v1.0.0 release](https://github.com/MaxListon/beat-the-grid/releases/tag/v1.0.0), with checksums). A GitHub Action publishes the next day's forecast every day at 12:00 UTC and commits it before the day begins, with a "what pushed it up or down" explanation from the model's SHAP values. Each finished day is scored automatically, added to a public track-record calendar, and plotted against the range of errors the backtest found normal, so anyone can see whether the backtest held up.
+
+The first days of running it live taught more than the backtest did:
+
+- **A data-feed bug, caught before it counted.** The first live forecast (for 2026-11-16) read demand only from EIA's bulk files, which run more than a day behind, so four inputs the model always had in the backtest were blank. I voided that forecast before its day began, kept the file unchanged in the public log, and switched the live job to EIA's real-time feed. The first valid forecast was for 2026-11-17.
+- **Reliability.** GitHub started the first scheduled run 2 hours 43 minutes late. The job now has two backup runs a day, exact package versions are pinned so the frozen model gives identical forecasts, and a failed run opens a GitHub issue automatically.
+- **A safeguard from my own mistake.** A manual test run I started just after midnight UTC began building the next day's forecast 11 hours early, before all its inputs existed. I cancelled it before anything was saved, and the code now refuses to issue a forecast before 12:00 UTC on the day before.
 
 ## Check the numbers yourself
-The site has a SQL console (DuckDB running in the browser) over every scored hour, every region and every daily peak, with example queries. Every number in this write-up can be reproduced there.
+The site has a SQL console (DuckDB running in the browser) over every scored hour, every region and every daily peak, with example queries. Every number in this write-up can be reproduced there, or from the [analysis notebook](https://github.com/MaxListon/beat-the-grid/blob/main/notebooks/analysis.ipynb) using the tables described in [DATA.md](https://github.com/MaxListon/beat-the-grid/blob/main/DATA.md).
+
+You can also try to beat the model yourself: the site's "Can you beat the model?" section shows real demand from the days before a past day, lets you draw your own 24-hour forecast, and scores it against my model and the grid operator's.
 
 ## Next steps
 - Confirm the **storm-warning signal** on the 2027 hurricane season, then adopt it as model v2.

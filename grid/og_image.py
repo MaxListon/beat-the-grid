@@ -208,7 +208,8 @@ def build() -> list[Path]:
     out = []
     for size, path in (((1200, 630), SITE_DATA.parent / "og.png"), ((1280, 640), ROOT / ".github" / "media" / "social.png")):
         path.parent.mkdir(parents=True, exist_ok=True)
-        draw(*size).save(path, optimize=True)   # full color: a palette drops the logo's purples
+        # 256-color palette without dithering keeps the logo's purples and the file small (it's committed daily)
+        draw(*size).quantize(colors=256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE).save(path, optimize=True)
         out.append(path)
     return out
 

@@ -153,6 +153,11 @@ def main() -> None:
     target = (pd.Timestamp.now(tz="UTC") + pd.Timedelta(days=1)).date()
     issue(target, eia, wx)
     site_data.build_live(eia, scores)
+    try:                                   # the share image shows the latest live forecast; never let it block a forecast
+        from . import og_image
+        og_image.build()
+    except Exception as e:  # noqa: BLE001
+        print(f"share image not updated: {e}")
 
 
 if __name__ == "__main__":
