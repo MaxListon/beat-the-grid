@@ -8,7 +8,7 @@
   --page:#f9f9f7; --page-alt:#f1f0ec; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#6b6a66;
   --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
   --link:#1c5cab; --accent:#2a78d6; --bad-text:#b02a2a; --down:#e34948;
-  --ours:#2a78d6; --ours-band:rgba(42,120,214,.16); --official:#eb6834; --actual:#0b0b0b;
+  --ours:#2a78d6; --ours-band:rgba(42,120,214,.16); --official:#eb6834; --actual:#0b0b0b; --ours-text:#1c5cab; --official-text:#a8441a;
   --good:#0ca30c; --good-text:#006300; --bad:#d03b3b; --tie:#898781; --warn:#b07800; --mid:#e9e8e3;
   --live:rgba(42,120,214,.07);
   --shadow:0 1px 2px rgba(20,20,30,.04),0 8px 24px rgba(20,20,30,.06);
@@ -21,7 +21,7 @@
     --page:#0d0d0d; --page-alt:#141413; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#a3a198;
     --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.10);
     --link:#6da7ec; --accent:#3987e5; --bad-text:#e66767; --down:#e66767;
-    --ours:#3987e5; --ours-band:rgba(57,135,229,.22); --official:#d95926; --actual:#f0efec;
+    --ours:#3987e5; --ours-band:rgba(57,135,229,.22); --official:#d95926; --actual:#f0efec; --ours-text:#6da7ec; --official-text:#f08a5d;
     --good:#0ca30c; --good-text:#3dbb3d; --bad:#e66767; --tie:#898781; --warn:#e0a526; --mid:#262624;
     --live:rgba(57,135,229,.10);
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
@@ -32,7 +32,7 @@
   --page:#0d0d0d; --page-alt:#141413; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#a3a198;
   --grid:#2c2c2a; --axis:#383835; --ring:rgba(255,255,255,.10);
   --link:#6da7ec; --accent:#3987e5; --bad-text:#e66767; --down:#e66767;
-  --ours:#3987e5; --ours-band:rgba(57,135,229,.22); --official:#d95926; --actual:#f0efec;
+  --ours:#3987e5; --ours-band:rgba(57,135,229,.22); --official:#d95926; --actual:#f0efec; --ours-text:#6da7ec; --official-text:#f08a5d;
   --good:#0ca30c; --good-text:#3dbb3d; --bad:#e66767; --tie:#898781; --warn:#e0a526; --mid:#262624;
   --live:rgba(57,135,229,.10);
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
@@ -106,7 +106,7 @@ h3{font-size:17px;font-weight:650;margin-bottom:var(--s1)}
 .hero-card{margin:0;padding:var(--s5)}
 .hero-card figcaption{display:flex;flex-direction:column;margin-bottom:var(--s2)}
 .hero-card figcaption span{font-size:13.5px;color:var(--muted)}
-.hero-chart{height:300px}
+.chart.hero-chart{height:380px}
 
 /* ---- buttons ---- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:11px 22px;border-radius:var(--r);border:0;background:var(--link);color:#fff;font:inherit;font-weight:650;font-size:15.5px;text-decoration:none;cursor:pointer;transition:transform .15s,filter .15s}
@@ -199,8 +199,8 @@ table.lb{width:100%;border-collapse:collapse;font-size:14.5px;min-width:760px}
 .lb td:first-child,.lb th:first-child{position:sticky;left:0;background:var(--surface);z-index:1}
 .lb tbody tr:hover td:first-child,.lb tbody tr.hl td:first-child{background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
 .badge-r{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:650;padding:3px 9px;border-radius:999px;white-space:nowrap}
-.badge-r.win{color:var(--good-text);background:color-mix(in srgb,var(--good) 14%,transparent)}
-.badge-r.loss{color:var(--bad-text);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.badge-r.win{color:var(--ours-text);background:color-mix(in srgb,var(--ours) 14%,transparent)}
+.badge-r.loss{color:var(--official-text);background:color-mix(in srgb,var(--official) 14%,transparent)}
 .badge-r.tie{color:var(--ink2);background:color-mix(in srgb,var(--tie) 16%,transparent)}
 .badge-r.suspect{color:var(--ink2);border:1px dashed var(--axis)}
 .impbar{display:flex;align-items:center;gap:8px;justify-content:flex-end}
@@ -232,7 +232,7 @@ select{font:inherit;font-size:15px;padding:8px 12px;border-radius:var(--r-sm);bo
 .chart{width:100%;height:280px;position:relative}
 .chart.tall{height:380px}
 .chart.short{height:200px}
-@media (max-width:640px){.chart.tall{height:320px}.hero-chart{height:240px}}
+@media (max-width:640px){.chart.tall{height:320px}.chart.hero-chart{height:260px}}
 .chart svg{width:100%;height:100%;overflow:visible}
 .axis text{fill:var(--muted);font-size:11.5px;font-family:var(--font);font-variant-numeric:tabular-nums}
 .axis path,.axis line{stroke:var(--axis)}
@@ -341,7 +341,7 @@ footer a{color:var(--muted)}
 .chart.auto{height:auto;min-height:120px}
 .sw.dotk{border-radius:50%;width:11px;height:11px}
 .pk-row:hover rect{fill:var(--row-hover,rgba(127,127,127,.06))}
-#peakMore{margin-top:var(--s2)}
+#peakMore,#lbMore{margin-top:var(--s2)}
 /* live track record */
 .track{margin:0 0 var(--s4)}
 .track-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:var(--s2)}
@@ -376,3 +376,19 @@ footer a{color:var(--muted)}
 .expect g.day:focus{outline:none}
 .expect g.day:focus circle{stroke:var(--ink)}
 .sw.dash{width:18px;height:0;border-radius:0;border-top:2px dashed var(--ours)}
+
+/* "Tomorrow" card: live tag */
+.live-tag{display:inline-block;vertical-align:middle;margin-left:8px;font-size:11.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--ours-text);background:color-mix(in srgb,var(--ours) 14%,transparent);border-radius:999px;padding:2px 8px}
+/* The live record gets its own dark band in both themes, so the page has one change of pace */
+section.band-dark{
+  color-scheme: dark;
+  --page:#0e1520; --page-alt:#0e1520; --surface:#151e2b; --ink:#f0efec; --ink2:#c0c6cf; --muted:#9aa3ae;
+  --grid:#253043; --axis:#33405a; --ring:rgba(255,255,255,.10); --link:#7fb2ef;
+  --ours:#3f8deb; --ours-band:rgba(63,141,235,.24); --official:#e5662f; --actual:#f0efec;
+  --ours-text:#8dbbf2; --official-text:#f39a70; --live:rgba(63,141,235,.12);
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.30);
+  background:var(--page);color:var(--ink);border-top:0
+}
+section.band-dark .takeaway{color:var(--ink2)}
+.live-lb:not(.all) tr.extra{display:none}
+#liveMore{margin:var(--s2) 0 var(--s3)}

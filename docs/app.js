@@ -8,15 +8,18 @@
   const pct = (x, d = 1) => (x == null || isNaN(x) ? "–" : (x * 100).toFixed(d) + "%");
   const gw = (mw) => (mw == null ? "–" : (mw >= 10000 ? (mw / 1000).toFixed(0) : (mw / 1000).toFixed(1)) + " GW");
   const MINUS = "−";
+  // "2026-11-17" -> "Nov 17, 2026" (or "Nov 17"); dates are calendar days, so format in UTC at noon
+  const fd = (iso, year = true) => (iso ? d3.utcFormat(year ? "%b %-d, %Y" : "%b %-d")(new Date(String(iso).slice(0, 10) + "T12:00:00Z")) : "–");
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const MAPBASE = "https://cdn.jsdelivr.net/npm/us-atlas@3.0.1/states-albers-10m.json";
   const VERDICT = {
-    win: { icon: "✓", label: "Model wins", short: "Win", cls: "win", color: () => css("--good") },
-    loss: { icon: "✕", label: "Official wins", short: "Loss", cls: "loss", color: () => css("--bad") },
+    win: { icon: "✓", label: "Model wins", short: "Win", cls: "win", color: () => css("--ours") },
+    loss: { icon: "✕", label: "Official wins", short: "Loss", cls: "loss", color: () => css("--official") },
     tie: { icon: "–", label: "No significant difference", short: "Tie", cls: "tie", color: () => css("--tie") },
   };
   let S = {}, LB = [], BR = {}, LIVE = {}, SER = {}, US = null;
-  let selected = null, compare = "", rangeDays = 14, filter = "all", sortKey = "mean_mw", sortDir = -1;
+  let selected = null, compare = "", rangeDays = 14, filter = "all", sortKey = "mean_mw", sortDir = -1, tableAll = false;
+  const TABLE_TOP = 10;
 
   /* ---------- tooltip ---------- */
   const tip = $("#tip");
@@ -43,7 +46,7 @@
     const ago = hours < 1 ? "under an hour ago" : hours < 48 ? `${Math.round(hours)} h ago` : `${Math.round(hours / 24)} days ago`;
     if (hours <= 30) { pill.classList.add("ok"); txt.textContent = `Live · updated ${ago}`; }
     else { pill.classList.add("stale"); txt.textContent = `Last update ${ago}`; }
-    pill.title = `Latest forecast published for ${LIVE.latest_issued}`;
+    pill.title = `Latest forecast published for ${fd(LIVE.latest_issued)}`;
   }
   function renderVersion() {
     const m = S.model || {}, b = S.backtest || {};
@@ -90,7 +93,7 @@
     $("#tiles").innerHTML = [
       [pct(h.load_weighted_mape_ours, 2), "my average hourly error (demand-weighted)"],
       [pct(h.load_weighted_mape_official, 2), "grid operators' average hourly error"],
-      [(b.hours_scored / 1e6).toFixed(2) + "M", `region-hours scored, ${b.start} to ${b.end}`],
+      [(b.hours_scored / 1e6).toFixed(2) + "M", `region-hours scored, ${fd(b.start)} to ${fd(b.end)}`],
       [pct(h.coverage_80, 0), "of actual demand fell inside my 80% range (target: 80%)"],
     ].map(([v, l]) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`).join("");
     const ex = h.excluded_suspect || [];
@@ -180,6 +183,12 @@
       const x = a[sortKey], y = b[sortKey];
       return (typeof x === "string" ? x.localeCompare(y) : x - y) * sortDir;
     });
+    const total = rows.length;
+    if (!tableAll && total > TABLE_TOP + 2) rows.splice(TABLE_TOP);
+    const more = $("#lbMore");
+    more.hidden = total <= TABLE_TOP + 2;
+    more.textContent = tableAll ? "Show the first 10 only" : `Show all ${total} regions`;
+    more.setAttribute("aria-expanded", String(tableAll));
     const maxImp = Math.min(0.6, d3.max(LB.filter((d) => !d.suspect_official), (d) => Math.abs(d.improvement)) || 0.1);
     $("#lb thead").innerHTML = "<tr>" + COLS.map((c) => {
       if (!c.k) return `<th>${c.t}</th>`;
@@ -308,7 +317,7 @@
     s.actual.forEach((a, i) => { if (a > 0 && s.p50[i] != null && s.official[i] > 0) { eo.push(Math.abs(s.p50[i] - a) / a); ef.push(Math.abs(s.official[i] - a) / a); } });
     if (!meta) return "";
     return [[pct(d3.mean(eo), 2), `my error, last ${rangeDays} days`], [pct(d3.mean(ef), 2), `official error, last ${rangeDays} days`],
-      [meta.suspect_official ? "Not scored" : `${VERDICT[meta.verdict].icon} ${VERDICT[meta.verdict].label}`, `full backtest since ${S.backtest.start}`],
+      [meta.suspect_official ? "Not scored" : `${VERDICT[meta.verdict].icon} ${VERDICT[meta.verdict].label}`, `full backtest since ${fd(S.backtest.start)}`],
     ].map(([v, l]) => `<div><b>${v}</b><br>${l}</div>`).join("");
   }
 
@@ -363,14 +372,14 @@
     const max = d3.max(Object.values(r.drivers), Math.abs) || 0.01;
     const sign = (v) => (v >= 0 ? "+" : MINUS) + Math.abs(v * 100).toFixed(1) + "%";
     const dT = r.temp_vs_last_week_c;
-    el.innerHTML = `<h3>Tomorrow (${W.target}), live forecast</h3><div class="facts">` +
+    el.innerHTML = `<h3>Tomorrow, ${d3.utcFormat("%A %b %-d")(new Date(W.target + "T12:00:00Z"))} <span class="live-tag">Live forecast</span></h3><div class="facts">` +
       `<span>Average <b>${gw(r.avg_mw)}</b> (${sign(r.vs_last_week)} vs last week)</span>` +
       `<span>Peak <b>${gw(r.peak_mw)}</b> around ${hr(r.peak_hour)}</span>` +
       (r.max_temp_c == null ? "" : `<span>Hottest hour <b>${r.max_temp_c.toFixed(0)}°C / ${(r.max_temp_c * 9 / 5 + 32).toFixed(0)}°F</b>${dT == null ? "" : ` (${dT >= 0 ? "+" : MINUS}${Math.abs(dT).toFixed(1)}°C vs a week earlier)`}</span>`) + `</div>` +
       `<div class="cap" style="margin:0 0 4px">What pushed the forecast up or down, as a share of last week's average:</div>` +
       Object.entries(r.drivers).map(([k, v]) => {
         const w = Math.abs(v) / max * 50;
-        return `<div class="drv"><span>${k}</span><span class="bar"><i style="left:${v >= 0 ? 50 : 50 - w}%;width:${w}%;background:${v >= 0 ? css("--ours") : css("--down")}"></i></span><span>${sign(v)}</span></div>`;
+        return `<div class="drv"><span>${k}</span><span class="bar"><i style="left:${v >= 0 ? 50 : 50 - w}%;width:${w}%;background:${v >= 0 ? css("--ours") : css("--tie")}"></i></span><span>${sign(v)}</span></div>`;
       }).join("");
   }
 
@@ -481,7 +490,7 @@
       g.append("line").attr("x1", cx(r.peak_ours)).attr("x2", cx(r.peak_official)).attr("y1", y).attr("y2", y).attr("stroke", css("--axis")).attr("stroke-width", 2);
       [["peak_official", "--official"], ["peak_ours", "--ours"]].forEach(([k, c]) =>
         g.append("circle").attr("cx", cx(r[k])).attr("cy", y).attr("r", 6).attr("fill", css(c)).attr("stroke", css("--surface")).attr("stroke-width", 2));
-      g.append("text").attr("class", "lbl").attr("x", W - m.r + 12).attr("y", y).attr("dy", "0.35em").attr("fill", css({ win: "--good-text", loss: "--bad-text", tie: "--muted" }[r.verdict])).style("font-weight", 700).text(v.icon);
+      g.append("text").attr("class", "lbl").attr("x", W - m.r + 12).attr("y", y).attr("dy", "0.35em").attr("fill", css({ win: "--ours-text", loss: "--official-text", tie: "--muted" }[r.verdict])).style("font-weight", 700).text(v.icon);
     });
     const tried = h.peak_model_tried || {};
     $("#peakNote").innerHTML = `<p>For each region-day with at least 23 scored hours, the peak is the highest hour. Peak error = how far each forecast's highest hour is from the real one, as a share of it. Timing counts as right if the forecast's highest hour is within one hour of the real one. Wins and losses use the same Diebold-Mariano test with Holm correction as the main contest, over ${d3.format(",")(h.days)} region-days.</p>` +
@@ -520,7 +529,7 @@
     if (!M.length) { fail(el, "this analysis"); return; }
     const t = (c) => (c == null ? "–" : `${c.toFixed(0)}°C`);
     el.innerHTML = M.map((m) => `<article class="card miss reveal"><h3>${m.name}</h3>` +
-      `<div class="when">${m.weekday}, ${m.date} · ${m.ba}</div>` +
+      `<div class="when">${m.weekday}, ${fd(m.date)} · ${m.ba}</div>` +
       `<div class="nums"><span>My error <b>${pct(m.mape_mine, 1)}</b></span><span>Official <b>${pct(m.mape_official, 1)}</b></span>` +
       `<span>High: forecast <b>${t(m.fc_temp_max)}</b>, actual <b>${t(m.obs_temp_max)}</b></span></div>` +
       `<p>${m.explanation || ""}</p></article>`).join("");
@@ -531,7 +540,7 @@
   function voidNote(L) {
     const v = (L && L.voided) || [];
     return v.length ? `<details class="more"><summary>${v.length} voided forecast${v.length > 1 ? "s" : ""}</summary>` +
-      v.map((d) => `<p><b>${d.date}</b>, voided ${d.voided_at_utc.replace("T", " ").replace("Z", " UTC")}, before the day began: ${d.reason}</p>`).join("") + `</details>` : "";
+      v.map((d) => `<p><b>${fd(d.date)}</b>, voided ${fd(d.voided_at_utc, false)} at ${d.voided_at_utc.slice(11, 16)} UTC, before the day began: ${d.reason}</p>`).join("") + `</details>` : "";
   }
   function renderLive() {
     const el = $("#liveCard"), L = LIVE;
@@ -540,17 +549,20 @@
       return;
     }
     const head = `<div class="live-grid">` +
-      `<div class="tile"><b>${L.forecasts_issued}</b><span>daily forecasts published${L.latest_issued ? `, latest for ${L.latest_issued}` : ""}</span></div>` +
+      `<div class="tile"><b>${L.forecasts_issued}</b><span>daily forecast${L.forecasts_issued === 1 ? "" : "s"} published${L.latest_issued ? `, latest for ${fd(L.latest_issued, false)}` : ""}</span></div>` +
       `<div class="tile"><b>${L.days || 0}</b><span>days scored so far</span></div>` +
-      `<div class="tile"><b>${L.start_date || "–"}</b><span>first scored day</span></div></div>`;
+      `<div class="tile"><b>${L.start_date ? fd(L.start_date, false) : "–"}</b><span>first scored day</span></div></div>`;
     if (!L.days) { el.innerHTML = head + `<p class="cap">Scores appear once EIA has reported the whole day, usually about two days later.</p>` + voidNote(L); return; }
     const rows = L.regions.slice().sort((a, b) => (b.mape_official - b.mape_ours) - (a.mape_official - a.mape_ours));
     const won = rows.filter((r) => r.mape_ours < r.mape_official).length;
     el.innerHTML = head + weekHTML(L.week) + calendarHTML(L.by_day || []) + (L.expect && (L.by_day || []).length ? `<div class="expect" id="expectChart"></div>` : "") + `<p class="cap">So far my error is lower in <b>${won} of ${rows.length}</b> regions over ${L.days} live day${L.days > 1 ? "s" : ""}. With only a few weeks of data these numbers are noisy; the backtest is the stronger evidence until the live record grows.</p>` +
-      `<div class="table-wrap"><table class="lb"><thead><tr><th>Region</th><th class="num">Days</th><th class="num">My error</th><th class="num">Official</th><th class="num">Days I was closer</th></tr></thead><tbody>` +
-      rows.map((r) => { const meta = LB.find((x) => x.ba === r.ba) || {}; return `<tr data-ba="${r.ba}" tabindex="0"><td class="reg"><b>${meta.name || r.ba}</b><span>${r.ba}</span></td><td class="num">${r.days}</td><td class="num">${pct(r.mape_ours, 2)}</td><td class="num">${pct(r.mape_official, 2)}</td><td class="num">${r.days_won} of ${r.days}</td></tr>`; }).join("") +
-      `</tbody></table></div>` + voidNote(L);
+      `<div class="table-wrap"><table class="lb live-lb" id="liveTable"><thead><tr><th>Region</th><th class="num">Days</th><th class="num">My error</th><th class="num">Official</th><th class="num">Days I was closer</th></tr></thead><tbody>` +
+      rows.map((r, i) => { const meta = LB.find((x) => x.ba === r.ba) || {}; return `<tr data-ba="${r.ba}" tabindex="0"${i >= 10 ? ' class="extra"' : ""}><td class="reg"><b>${meta.name || r.ba}</b><span>${r.ba}</span></td><td class="num">${r.days}</td><td class="num">${pct(r.mape_ours, 2)}</td><td class="num">${pct(r.mape_official, 2)}</td><td class="num">${r.days_won} of ${r.days}</td></tr>`; }).join("") +
+      `</tbody></table></div>` +
+      (rows.length > 12 ? `<button type="button" class="ghost" id="liveMore" aria-expanded="false" aria-controls="liveTable">Show all ${rows.length} regions</button>` : "") + voidNote(L);
     bindCalendar(el, L.by_day || []);
+    const lm = $("#liveMore");
+    if (lm) lm.addEventListener("click", () => { const all = $("#liveTable").classList.toggle("all"); lm.textContent = all ? "Show the first 10 only" : `Show all ${rows.length} regions`; lm.setAttribute("aria-expanded", String(all)); });
     if ($("#expectChart")) drawExpect($("#expectChart"), L.by_day, L.expect);
     el.querySelectorAll("tr[data-ba]").forEach((tr) => { tr.addEventListener("click", () => goExplore(tr.dataset.ba)); tr.addEventListener("keydown", (e) => { if (e.key === "Enter") goExplore(tr.dataset.ba); }); });
   }
@@ -571,6 +583,7 @@
 
   /* Live vs backtest: each live day's error against the range the backtest says is normal */
   function drawExpect(el, days, ex) {
+    const css = (v) => getComputedStyle(el).getPropertyValue(v).trim();
     const W = el.clientWidth || 640, H = 190, m = { t: 12, r: 12, b: 26, l: 44 };
     const t = (d) => new Date(d.date + "T00:00:00Z");
     const x0 = d3.utcDay.offset(t(days[0]), -1), x1 = d3.utcDay.offset(t(days[days.length - 1]), 1);
@@ -671,6 +684,29 @@
     }), { rootMargin: "600px 0px" });
     Object.keys(LAZY).forEach((id) => io.observe(document.getElementById(id)));
   }
+  // Jumping to a section (menu, buttons, a shared #link) must first draw every lazy section above it;
+  // otherwise those charts appear mid-jump, push the page down, and the jump lands short.
+  const isBefore = (el, target) => el === target || el.contains(target) || Boolean(el.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
+  function drawUpTo(target) {
+    Object.keys(LAZY).forEach((id) => { if (isBefore(document.getElementById(id), target) && !drawn.has(id)) renderSection(id); });
+  }
+  function jumpTo(hash, smooth) {
+    const target = hash && hash.length > 1 && document.getElementById(decodeURIComponent(hash.slice(1)));
+    if (!target) return false;
+    drawUpTo(target);
+    $$(".reveal:not(.in)").forEach((el) => { if (isBefore(el, target)) el.classList.add("in"); });
+    target.scrollIntoView({ behavior: smooth && !reduceMotion ? "smooth" : "auto" });
+    return true;
+  }
+  function bindAnchors() {
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest('a[href^="#"]');
+      if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      if (jumpTo(a.getAttribute("href"), true)) { e.preventDefault(); history.pushState(null, "", a.getAttribute("href")); }
+    });
+    addEventListener("popstate", () => jumpTo(location.hash, false));
+    if (location.hash) requestAnimationFrame(() => jumpTo(location.hash, false));
+  }
   function renderAll() {
     renderStatus(); renderVersion(); renderFindings(); renderScoreboard(); renderHeroChart();
     drawn.forEach((id) => LAZY[id]());
@@ -697,11 +733,12 @@
     $$("#filters .chip").forEach((b) => b.addEventListener("click", () => setFilter(b.dataset.f)));
     $("#showSuspect").addEventListener("change", renderTable);
     $("#peakMore").addEventListener("click", () => { peakAll = !peakAll; renderPeaks(); });
+    $("#lbMore").addEventListener("click", () => { tableAll = !tableAll; renderTable(); if (!tableAll) $("#lb").scrollIntoView({ block: "nearest" }); });
     selected = (LB.find((d) => d.ba === "ERCO") || LB[0]).ba;
     $("#regionSel").value = selected;
     renderAll();
     lazyRender();
-    scrollSpy(); observeReveal();
+    scrollSpy(); observeReveal(); bindAnchors();
     document.addEventListener("themechange", renderAll);
     let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => {
       renderHeroChart(); if (drawn.has("explore")) renderExplorer(); if (drawn.has("when")) renderWhen(); if (drawn.has("peaks")) renderPeaks(); }, 200); });

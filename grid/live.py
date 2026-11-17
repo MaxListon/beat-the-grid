@@ -15,7 +15,7 @@ import pandas as pd
 
 from . import eia as eia_mod
 from . import model, weather
-from .config import FORECASTS, MODELS, PROCESSED, live_files
+from .config import FORECASTS, ISSUE_HOUR_UTC, MODELS, PROCESSED, live_files
 from .features import build_region
 from .regions import REGIONS, unique_points
 
@@ -57,6 +57,13 @@ def issue(target: dt.date, eia: pd.DataFrame, wx: pd.DataFrame, now: pd.Timestam
     if path.exists():
         print(f"{path.name} already issued; not overwriting")
         return pd.read_csv(path)
+    # Never issue early: before 12:00 UTC on the day before, the newest demand the backtest allowed
+    # (up to 06:00 UTC) may not be published yet, so some inputs would be blank. A run at another
+    # hour (manual, or a schedule that fires early) just scores and refreshes the site.
+    opens = pd.Timestamp(target, tz="UTC") - pd.Timedelta(days=1) + pd.Timedelta(hours=ISSUE_HOUR_UTC)
+    if now < opens:
+        print(f"Not issuing {path.name} yet: forecasts for {target} are issued from {opens:%Y-%m-%d %H:%M} UTC")
+        return None
     models = model.load(FROZEN)
     rows, why = [], {}
     for ba in REGIONS:

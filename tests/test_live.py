@@ -87,3 +87,10 @@ def test_voided_days_are_not_scored_or_shown(tmp_path):
     (tmp_path / "2026-11-17.csv").write_text("x")
     (tmp_path / "void.json").write_text(json.dumps({"2026-11-16": {"reason": "bug", "voided_at_utc": "2026-11-15T12:30Z"}}))
     assert [f.name for f in live_files(tmp_path)] == ["2026-11-17.csv"]
+
+
+def test_refuses_to_issue_before_the_issue_time(isolated):
+    """A run just after midnight UTC must not issue the next day's forecast with half its inputs."""
+    eia, wx = synthetic("CISO", days=60)
+    out = live.issue(pd.Timestamp("2025-02-20").date(), eia, wx, now=pd.Timestamp("2025-02-19 00:28", tz="UTC"))
+    assert out is None and not (isolated / "2025-02-20.csv").exists()
