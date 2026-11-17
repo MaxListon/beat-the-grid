@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Beat the Grid: An Open Model vs. US Grid Operator Forecasts</title>
 <meta name="description" content="Can one open model forecast tomorrow's electricity demand better than America's grid operators? A fair, statistically tested, live contest across 34 US grid regions.">
+<link rel="alternate" type="application/rss+xml" title="Beat the Grid: the live record" href="feed.xml">
 <link rel="canonical" href="https://maxliston.github.io/beat-the-grid/">
 <meta name="theme-color" content="#1c5cab">
 <meta name="author" content="Maxwell Liston">
@@ -30,7 +31,7 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preload" href="data/summary.json" as="fetch" crossorigin>
-<link rel="stylesheet" href="style.css?v=dee1486157">
+<link rel="stylesheet" href="style.css?v=b181cfb4bb">
 <script>document.documentElement.classList.add("js");</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Beat the Grid","url":"https://maxliston.github.io/beat-the-grid/",
@@ -71,6 +72,7 @@
       </ul>
       <div class="cta-row">
         <a class="btn" href="#explore">See the live forecast</a>
+        <a class="secondary" href="#explore" id="findLink">Find your grid</a>
         <a class="secondary" href="writeup.html">Read the write-up</a>
       </div>
       <p class="badge-row" id="versionBadge"></p>
@@ -133,6 +135,10 @@
     <h2>Hour by hour, every region</h2>
     <p class="takeaway">Blue is my model with its 80% range, orange is the grid operator's day-ahead forecast, and the dark line is what actually happened. The shaded area at the end is tomorrow's live forecast.</p>
     <div class="card">
+      <div class="find-grid">
+        <label class="field-inline" for="stateSel"><span>Find your grid: where do you live?</span><select id="stateSel"><option value="">Pick your state</option></select></label>
+        <p class="find-out" id="findOut" aria-live="polite"></p>
+      </div>
       <div class="explore-controls">
         <label class="field-inline"><span>Region</span><select id="regionSel"></select></label>
         <label class="field-inline"><span>Compare with</span><select id="compareSel"><option value="">None</option></select></label>
@@ -142,6 +148,7 @@
           <button type="button" data-d="30" aria-pressed="false">30 days</button>
         </div>
         <button type="button" class="ghost" id="csvBtn">Download CSV</button>
+        <button type="button" class="ghost" id="linkBtn" title="Copy a link that opens this exact view">Copy link</button>
       </div>
       <div class="mini" id="regionStats"></div>
       <div class="why" id="whyCard" hidden></div>
@@ -172,7 +179,8 @@
       </div>
       <div class="series-legend" id="gameLegend"></div>
       <div id="gameChart" class="chart game-chart" aria-describedby="gameHint"><div class="skel skel-block"></div></div>
-      <p class="cap" id="gameHint">Drag across the shaded day to draw your forecast. You can redraw any part.</p>
+      <p class="cap" id="gameHint" aria-live="polite">Drag across the shaded day to draw your forecast. You can redraw any part.</p>
+      <p class="note game-keys">Keyboard: focus the chart, then ← → to pick an hour and ↑ ↓ to set it (Shift for bigger steps).</p>
       <div class="game-actions"><button class="btn" id="gameReveal" type="button" disabled>Reveal what happened</button><span class="game-record" id="gameRecord"></span></div>
       <div id="gameResult" class="game-result" aria-live="polite"></div>
     </div>
@@ -256,6 +264,7 @@
     <p class="kicker">The live record</p>
     <h2>Forecasts published before the day begins</h2>
     <p class="takeaway">A backtest can be tuned until it looks good; a live record can't. Every morning at 12:00 UTC an automated job publishes tomorrow's forecast with a model frozen at launch and commits it to GitHub before the day begins.</p>
+    <p class="follow"><a href="feed.xml">Follow the daily forecast (RSS)</a> · new forecast every morning, scores as days finish</p>
     <div class="card" id="liveCard"></div>
   </div>
 </section>
@@ -369,11 +378,11 @@
 <div id="tip" class="tip" role="tooltip" hidden></div>
 
 <script src="config.js?v=51aedb09f1"></script>
-<script src="site.js?v=eba6501da6"></script>
+<script src="site.js?v=35f4c976a2"></script>
 <script src="contact.js?v=7475b973ea" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" defer></script>
-<script src="app.js?v=696b9d894a" defer></script>
+<script src="app.js?v=18b4d0781f" defer></script>
 <script type="module" src="sql.js?v=8e488f8717"></script>
 </body>
 </html>

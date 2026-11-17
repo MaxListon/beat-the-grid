@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>
+<title>Beat the Grid: the live record</title>
+<link>https://maxliston.github.io/beat-the-grid/</link>
+<atom:link href="https://maxliston.github.io/beat-the-grid/feed.xml" rel="self" type="application/rss+xml"/>
+<description>A daily electricity demand forecast for 34 US grid regions, published before each day begins, and how it scored against the grid operators.</description>
+<language>en-us</language>
+<lastBuildDate>Mon, 16 Nov 2026 14:50:00 +0000</lastBuildDate>
+<item><title>Forecast for Tue Nov 17: PJM peak 109 GW around 7:00</title><link>https://maxliston.github.io/beat-the-grid/#live</link><guid isPermaLink="false">forecast-2026-11-17</guid><pubDate>Mon, 16 Nov 2026 14:50:00 +0000</pubDate><description>&lt;p&gt;Published 2026-11-16 14:50 UTC, before the day began, for 34 regions. The largest:&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;PJM Interconnection&lt;/b&gt;: average 97.9 GW, peak 108.8 GW around 7:00 local (+8.0% vs last week)&lt;/li&gt;&lt;li&gt;&lt;b&gt;Midcontinent ISO&lt;/b&gt;: average 75.3 GW, peak 80.5 GW around 17:00 local (+6.2% vs last week)&lt;/li&gt;&lt;li&gt;&lt;b&gt;ERCOT&lt;/b&gt;: average 52.5 GW, peak 57.6 GW around 7:00 local (+7.0% vs last week)&lt;/li&gt;&lt;li&gt;&lt;b&gt;Southwest Power Pool&lt;/b&gt;: average 33.4 GW, peak 36.8 GW around 7:00 local (+6.4% vs last week)&lt;/li&gt;&lt;li&gt;&lt;b&gt;Southern Company&lt;/b&gt;: average 26.3 GW, peak 31.6 GW around 7:00 local (+11.9% vs last week)&lt;/li&gt;&lt;li&gt;&lt;b&gt;California ISO&lt;/b&gt;: average 25.3 GW, peak 28.2 GW around 8:00 local (+3.0% vs last week)&lt;/li&gt;&lt;li&gt;&lt;b&gt;Tennessee Valley Authority&lt;/b&gt;: average 19.7 GW, peak 24.4 GW around 7:00 local (+12.4% vs last week)&lt;/li&gt;&lt;li&gt;&lt;b&gt;New York ISO&lt;/b&gt;: average 16.6 GW, peak 19.2 GW around 18:00 local (+6.0% vs last week)&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Every forecast: &lt;a href="https://github.com/MaxListon/beat-the-grid/tree/main/forecasts"&gt;forecasts/&lt;/a&gt;&lt;/p&gt;</description></item>
+</channel></rss>

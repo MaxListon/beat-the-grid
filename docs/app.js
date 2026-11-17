@@ -380,9 +380,144 @@
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  /* ---------- plain-language definitions for the jargon (first use in each section) ---------- */
+  const GLOSSARY = [
+    [/\bbalancing authorit(?:y|ies)\b/i, "Balancing authority", "The organization that keeps electricity supply and demand matched, second by second, on its part of the grid. This contest scores 34 of them."],
+    [/\bday-ahead (?:demand )?forecasts?\b/i, "Day-ahead forecast", "A prediction, made the day before, of how much electricity a region will use each hour. Operators use it to decide which power plants to schedule."],
+    [/\bmean absolute percentage error\b|\bMAPE\b|\baverage (?:hourly )?error\b/i, "Average error", "How far off a forecast is, on average, as a percent of what actually happened. 3% means a typical hour was off by 3%. Lower is better."],
+    [/\bweighted by demand\b|\bdemand-weighted\b/i, "Weighted by demand", "Big grids count more than small ones, in proportion to how much electricity they use, so the result reflects where power is actually used."],
+    [/\b80% range\b/i, "80% range", "Besides one number, my model gives a low and a high value for each hour. If that range is honest, actual demand lands inside it about 80% of the time."],
+    [/\bDiebold-Mariano\b/i, "Diebold-Mariano test", "A standard statistical test of whether one forecast is genuinely more accurate than another, or whether the gap could just be luck."],
+    [/\bHolm(?:-corrected| correction)?\b/i, "Holm correction", "An adjustment for running many tests at once (one per region), so that a few lucky results don't get counted as wins."],
+    [/\bstatistically significant\b/i, "Statistically significant", "Unlikely to be luck: the difference held up under the Diebold-Mariano test with Holm correction (p < 0.05)."],
+    [/\bwalk-forward\b/i, "Walk-forward", "Testing that mimics real life: the model is retrained every quarter using only past data, then scored on the next quarter, which it has never seen."],
+    [/\bbacktest\b/i, "Backtest", "Scoring a model on past data as if it had been running at the time, using only the information it would have had then."],
+    [/\bSHAP\b/, "SHAP values", "A method that splits a model's prediction into the contribution of each input. Here it shows what pushed a forecast up or down."],
+    [/\bdaily peak\b/i, "Daily peak", "The day's single highest hour of demand, when the most expensive standby power plants have to run."],
+  ];
+  const SKIP = "a,button,select,option,svg,h1,h2,h3,label,summary,.term,.tip,.ticker,table,.kicker,.eyebrow,script,style,code,pre,.sql-card";
+  function glossify(scope) {
+    if (!scope) return;
+    const seen = new Set([...scope.querySelectorAll(".term")].map((t) => +t.dataset.k));   // already explained in this section
+    const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (n.nodeValue.trim().length > 3 && !n.parentElement.closest(SKIP) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
+    });
+    const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      for (let k = 0; k < GLOSSARY.length; k++) {
+        if (seen.has(k)) continue;
+        const m = GLOSSARY[k][0].exec(node.nodeValue);
+        if (!m) continue;
+        seen.add(k);
+        const after = node.splitText(m.index), rest = after.splitText(m[0].length);
+        const span = document.createElement("span");
+        span.className = "term"; span.tabIndex = 0; span.dataset.k = k; span.textContent = after.nodeValue;
+        span.setAttribute("aria-label", `${after.nodeValue}: ${GLOSSARY[k][2]}`);
+        after.replaceWith(span);
+        glossifyNode(rest, seen);
+        break;
+      }
+    }
+  }
+  function glossifyNode(node, seen) {           // keep scanning the remainder of a split text node
+    for (let k = 0; k < GLOSSARY.length; k++) {
+      if (seen.has(k)) continue;
+      const m = GLOSSARY[k][0].exec(node.nodeValue);
+      if (!m) continue;
+      seen.add(k);
+      const after = node.splitText(m.index), rest = after.splitText(m[0].length);
+      const span = document.createElement("span");
+      span.className = "term"; span.tabIndex = 0; span.dataset.k = k; span.textContent = after.nodeValue;
+      span.setAttribute("aria-label", `${after.nodeValue}: ${GLOSSARY[k][2]}`);
+      after.replaceWith(span);
+      glossifyNode(rest, seen);
+      return;
+    }
+  }
+  function bindGlossary() {
+    const html = (el) => { const g = GLOSSARY[+el.dataset.k]; return `<div class="t">${g[1]}</div><div class="def">${g[2]}</div>`; };
+    let pinned = null;
+    document.addEventListener("mouseover", (e) => { const t = e.target.closest(".term"); if (t && !pinned) showTip(html(t), e); });
+    document.addEventListener("mouseout", (e) => { if (e.target.closest(".term") && !pinned) hideTip(); });
+    document.addEventListener("focusin", (e) => { const t = e.target.closest(".term"); if (t) showTip(html(t), { type: "focus", target: t }); });
+    document.addEventListener("focusout", (e) => { if (e.target.closest(".term")) { pinned = null; hideTip(); } });
+    document.addEventListener("click", (e) => {                    // tap on touch screens
+      const t = e.target.closest(".term");
+      if (t) { pinned = pinned === t ? null : t; if (pinned) showTip(html(t), { type: "focus", target: t }); else hideTip(); }
+      else if (pinned) { pinned = null; hideTip(); }
+    });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { pinned = null; hideTip(); } });
+  }
+
+  /* ---------- shareable explorer views: #explore?region=ERCO&days=30&compare=PJM ---------- */
+  function viewFromHash() {
+    const q = location.hash.split("?")[1];
+    if (!q || !location.hash.startsWith("#explore")) return;
+    const sp = new URLSearchParams(q), ba = sp.get("region"), cmp = sp.get("compare"), d = +sp.get("days");
+    if (ba && LB.some((r) => r.ba === ba)) selected = ba;
+    if ([7, 14, 30].includes(d)) { rangeDays = d; $$("#rangeSeg button").forEach((x) => x.setAttribute("aria-pressed", String(+x.dataset.d === d))); }
+    if (cmp && LB.some((r) => r.ba === cmp)) { compare = cmp; $("#compareSel").value = cmp; }
+  }
+  function viewLink() {
+    const sp = new URLSearchParams({ region: selected, days: rangeDays });
+    if (compare) sp.set("compare", compare);
+    return `${location.origin}${location.pathname}#explore?${sp}`;
+  }
+  const syncView = () => { try { history.replaceState(null, "", "#explore?" + viewLink().split("#explore?")[1]); } catch (e) { /* file:// */ } };
+  async function copyText(text, btn, done) {
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {
+      const ta = Object.assign(document.createElement("textarea"), { value: text }); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); try { ok = document.execCommand("copy"); } catch (e2) { ok = false; } ta.remove();
+    }
+    const label = btn.textContent; btn.textContent = ok ? done : "Couldn't copy"; setTimeout(() => { btn.textContent = label; }, 1800);
+  }
+
+  /* ---------- "Find your grid": a state picker that jumps to the region serving most of that state ---------- */
+  const STATE_BA = {
+    Alabama: "SOCO", Arizona: "AZPS", Arkansas: "MISO", California: "CISO", Colorado: "PSCO", Connecticut: "ISNE", Delaware: "PJM",
+    "District of Columbia": "PJM", Florida: "FPL", Georgia: "SOCO", Idaho: "IPCO", Illinois: "PJM", Indiana: "MISO", Iowa: "MISO",
+    Kansas: "SWPP", Kentucky: "LGEE", Louisiana: "MISO", Maine: "ISNE", Maryland: "PJM", Massachusetts: "ISNE", Michigan: "MISO",
+    Minnesota: "MISO", Mississippi: "MISO", Missouri: "MISO", Nebraska: "SWPP", Nevada: "NEVP", "New Hampshire": "ISNE",
+    "New Jersey": "PJM", "New Mexico": "PNM", "New York": "NYIS", "North Carolina": "DUK", "North Dakota": "MISO", Ohio: "PJM",
+    Oklahoma: "SWPP", Oregon: "PGE", Pennsylvania: "PJM", "Rhode Island": "ISNE", "South Carolina": "SCEG", "South Dakota": "SWPP",
+    Tennessee: "TVA", Texas: "ERCO", Utah: "PACE", Vermont: "ISNE", Virginia: "PJM", Washington: "PSEI", "West Virginia": "PJM",
+    Wisconsin: "MISO", Wyoming: "PACE", Montana: null, Alaska: null, Hawaii: null,
+  };
+  const storeGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const storeSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } };
+  function findGridText(state, ba) {
+    if (!ba) return state === "Montana"
+      ? "Montana's main grid operator, NorthWestern Energy, isn't one of the 34 regions in the contest."
+      : `${state} runs its own electric grid, separate from the mainland regions in this contest.`;
+    const d = LB.find((r) => r.ba === ba) || {};
+    const how = d.suspect_official ? "its official forecast data looked unreliable, so it isn't scored in the contest"
+      : d.verdict === "win" ? `my model beat the operator's own forecast there in the backtest (${pct(d.mape_ours, 2)} vs ${pct(d.mape_official, 2)} average error)`
+      : d.verdict === "loss" ? `the operator's own forecast beat my model there (${pct(d.mape_official, 2)} vs my ${pct(d.mape_ours, 2)})`
+      : `my model and the operator were statistically tied there (${pct(d.mape_ours, 2)} vs ${pct(d.mape_official, 2)})`;
+    return `Most of ${state} is served by <b>${d.name || ba}</b>, and ${how}. The charts below now show your grid.`;
+  }
+  function chooseState(state, quiet) {
+    const ba = STATE_BA[state];
+    $("#findOut").innerHTML = state ? findGridText(state, ba) : "";
+    storeSet("btg-state", state || "");
+    if (!ba) return;
+    select(ba);
+    if (game.init && !game.revealed && game.ba !== ba && GAME_LIST().includes(ba)) { $("#gameRegion").value = ba; newGame(ba); }
+    if (!quiet) document.getElementById("explore").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }
+  function renderFindGrid() {
+    const sel = $("#stateSel");
+    sel.innerHTML = `<option value="">Pick your state</option>` + Object.keys(STATE_BA).sort().map((st) => `<option>${st}</option>`).join("");
+    sel.addEventListener("change", () => chooseState(sel.value, true));
+    const saved = storeGet("btg-state");
+    if (saved && saved in STATE_BA) { sel.value = saved; $("#findOut").innerHTML = findGridText(saved, STATE_BA[saved]); }
+  }
+  const savedBA = () => { const st = storeGet("btg-state"); return st && STATE_BA[st] ? STATE_BA[st] : null; };
+
   /* ---------- "Can you beat the model?": draw the next 24 hours, then compare with my model and the operator ---------- */
-  const GAME_REGIONS = ["PJM", "MISO", "ERCO", "SWPP", "CISO", "NYIS", "ISNE", "FPL"];
-  const game = { ba: "PJM", s: null, day: null, guess: null, revealed: false, used: new Set() };
+  const GAME_LIST = () => LB.filter((d) => !d.suspect_official).sort((a, b) => b.mean_mw - a.mean_mw).map((d) => d.ba);
+  const game = { ba: "PJM", s: null, day: null, guess: null, revealed: false, used: new Set(), cur: 0, kb: false };
   const gameRecord = () => { try { return JSON.parse(localStorage.getItem("btg-game") || "{}"); } catch (e) { return {}; } };
   function saveRecord(r) { try { localStorage.setItem("btg-game", JSON.stringify(r)); } catch (e) { /* private mode: no record */ } }
   function showRecord() {
@@ -415,7 +550,7 @@
     game.day = days[Math.floor(Math.random() * days.length)];
     game.used.add(game.ba + game.day);
     game.guess = new Array(24).fill(null);
-    game.revealed = false;
+    game.revealed = false; game.cur = 0; game.kb = false;
     const start = new Date(+game.s.t[game.day] - 36e5);
     $("#gameDay").textContent = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: tz }).format(start);
     $("#gameResult").innerHTML = "";
@@ -460,6 +595,12 @@
     svg.append("path").attr("class", "guess").attr("d", line(game.guess, game.day)).attr("fill", "none").attr("stroke", "var(--you)").attr("stroke-width", 3).attr("stroke-linecap", "round");
     svg.selectAll("circle.g").data(game.guess.map((v, k) => [v, k]).filter((p) => p[0] != null)).join("circle").attr("class", "g")
       .attr("cx", (p) => x(game.day + p[1])).attr("cy", (p) => y(p[0])).attr("r", 2.5).attr("fill", "var(--you)");
+    game.y = y;
+    if (game.kb && !game.revealed) {
+      const cx = x(game.day + game.cur), v = game.guess[game.cur];
+      svg.append("line").attr("x1", cx).attr("x2", cx).attr("y1", m.t).attr("y2", H - m.b).attr("stroke", "var(--you)").attr("stroke-dasharray", "3 3");
+      if (v != null) svg.append("circle").attr("cx", cx).attr("cy", y(v)).attr("r", 6).attr("fill", "none").attr("stroke", "var(--you)").attr("stroke-width", 2);
+    }
     if (game.revealed) return;
     // drawing surface over the target day
     const pad = svg.append("rect").attr("class", "game-pad").attr("x", x(game.day - 0.5)).attr("width", x(d1 - 1) - x(game.day - 0.5) + m.r)
@@ -509,14 +650,23 @@
     const score = (label, v, cls) => `<div class="game-score ${cls}"><b>${pct(v, 1)}</b><span>${label}</span></div>`;
     $("#gameResult").innerHTML = `<p class="game-verdict">${verdict}</p><div class="game-scores">` +
       score("your error", you, "you") + score("my model", mine, "mine") + score("grid operator", off, "off") + `</div>` +
+      `<p class="game-share"><button type="button" class="ghost" id="gameShare">Share my score</button></p>` +
       `<p class="note">Average error over the 24 hours. My model only knew demand up to 06:00 UTC the day before, plus a weather forecast; you saw the days before it.</p>`;
+    const region = (LB.find((d) => d.ba === game.ba) || {}).name || game.ba, dayName = $("#gameDay").textContent;
+    const brag = beatMine && beatOff ? `I beat both a machine-learning model and the grid operator` : beatOff ? `I beat the grid operator` : beatMine ? `I beat the machine-learning model` : `I tried to out-forecast the grid`;
+    const share = `${brag} forecasting electricity demand for ${region} on ${dayName}: my error ${pct(you, 1)}, the model ${pct(mine, 1)}, the operator ${pct(off, 1)}. Can you do better?`;
+    $("#gameShare").addEventListener("click", async (e) => {
+      const url = `${location.origin}${location.pathname}#game`;
+      if (navigator.share && matchMedia("(pointer: coarse)").matches) { try { await navigator.share({ title: "Beat the Grid", text: share, url }); return; } catch (err) { /* cancelled */ } }
+      copyText(`${share} ${url}`, e.currentTarget, "Copied, paste it anywhere");
+    });
     $("#gameReveal").hidden = true;
     $("#gameHint").textContent = "The line that continues the history is what actually happened. Try another day or another region.";
     drawGame();
   }
   function renderGame() {
     const sel = $("#gameRegion");
-    sel.innerHTML = GAME_REGIONS.map((ba) => { const m = LB.find((d) => d.ba === ba) || {}; return `<option value="${ba}">${m.name || ba}</option>`; }).join("");
+    sel.innerHTML = GAME_LIST().map((ba) => { const m = LB.find((d) => d.ba === ba) || {}; return `<option value="${ba}">${m.name || ba}</option>`; }).join("");
     $("#gameLegend").innerHTML = `<span class="key"><i class="sw line" style="background:var(--you)"></i>Your forecast</span>` +
       `<span class="key"><i class="sw line" style="background:${css("--actual")}"></i>Actual</span>` +
       `<span class="key"><i class="sw line" style="background:${css("--ours")}"></i>My model</span>` +
@@ -524,6 +674,32 @@
     sel.addEventListener("change", () => newGame(sel.value));
     $("#gameNew").addEventListener("click", () => newGame());
     $("#gameReveal").addEventListener("click", reveal);
+    const chart = $("#gameChart");
+    chart.tabIndex = 0;
+    chart.setAttribute("role", "application");
+    chart.setAttribute("aria-roledescription", "forecast drawing");
+    chart.setAttribute("aria-label", "Draw your forecast. Left and right arrows pick an hour, up and down arrows change it, hold Shift for bigger steps.");
+    chart.addEventListener("keydown", (e) => {
+      if (game.revealed || !game.s || !game.y) return;
+      const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+      if (!keys.includes(e.key)) return;
+      e.preventDefault();
+      game.kb = true;
+      const [lo, hi] = game.y.domain(), step = (hi - lo) * (e.shiftKey ? 0.05 : 0.01);
+      const seed = () => game.guess[game.cur] ?? game.guess[game.cur - 1] ?? game.s.actual[game.day - 1];
+      if (e.key === "ArrowLeft") game.cur = Math.max(0, game.cur - 1);
+      if (e.key === "ArrowRight") { const prev = game.guess[game.cur]; game.cur = Math.min(23, game.cur + 1); if (game.guess[game.cur] == null && prev != null) game.guess[game.cur] = prev; }
+      if (e.key === "Home") game.cur = 0;
+      if (e.key === "End") game.cur = 23;
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") game.guess[game.cur] = Math.max(lo, Math.min(hi, seed() + (e.key === "ArrowUp" ? step : -step)));
+      if (game.guess[game.cur] == null) game.guess[game.cur] = seed();
+      const n = game.guess.filter((g) => g != null).length, tz = (window.REGION_TZ || {})[game.ba];
+      const when = new Intl.DateTimeFormat("en-US", { hour: "numeric", timeZone: tz }).format(new Date(+game.s.t[game.day + game.cur] - 36e5));
+      $("#gameReveal").disabled = n < 18;
+      $("#gameHint").textContent = `${when}: ${gw(game.guess[game.cur])}. ${n} of 24 hours set${n < 18 ? " (set at least 18)" : ", ready to reveal"}.`;
+      drawGame();
+    });
+    chart.addEventListener("blur", () => { if (game.kb) { game.kb = false; if (game.s) drawGame(); } });
     $("#gameHelp").addEventListener("click", () => {
       if (game.revealed || !game.s) return;
       game.guess = d3.range(24).map((k) => game.s.actual[game.day - 24 + k]);
@@ -532,7 +708,9 @@
       drawGame();
     });
     showRecord();
-    newGame("PJM");
+    const start = GAME_LIST().includes(savedBA()) ? savedBA() : "PJM";
+    sel.value = start;
+    newGame(start);
   }
 
   /* ---------- live ticker: tomorrow's forecast for every region, scrolling under a pause button ---------- */
@@ -875,7 +1053,7 @@
     live: () => renderLive(),
   };
   const drawn = new Set();
-  function renderSection(id) { drawn.add(id); LAZY[id](); }
+  function renderSection(id) { drawn.add(id); LAZY[id](); glossify(document.getElementById(id)); }
   function lazyRender() {
     if (!("IntersectionObserver" in window)) { Object.keys(LAZY).forEach(renderSection); return; }
     const io = new IntersectionObserver((es) => es.forEach((e) => {
@@ -890,12 +1068,27 @@
     Object.keys(LAZY).forEach((id) => { if (isBefore(document.getElementById(id), target) && !drawn.has(id)) renderSection(id); });
   }
   function jumpTo(hash, smooth) {
-    const target = hash && hash.length > 1 && document.getElementById(decodeURIComponent(hash.slice(1)));
+    const target = hash && hash.length > 1 && document.getElementById(decodeURIComponent(hash.slice(1).split("?")[0]));
     if (!target) return false;
     drawUpTo(target);
     $$(".reveal:not(.in)").forEach((el) => { if (isBefore(el, target) || target.contains(el)) el.classList.add("in"); });
     target.scrollIntoView({ behavior: smooth && !reduceMotion ? "smooth" : "auto" });
+    holdPosition(target, smooth && !reduceMotion ? 900 : 0);
     return true;
+  }
+  // Content above the target can still be filling in (the map, async text). For a moment after a jump, keep the
+  // target where it landed, unless the visitor starts scrolling themselves.
+  function holdPosition(target, delay) {
+    const want = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 72, t0 = performance.now();
+    let stop = false;
+    const quit = () => { stop = true; };
+    ["wheel", "touchstart", "keydown", "mousedown"].forEach((ev) => addEventListener(ev, quit, { once: true, passive: true }));
+    const tick = () => {
+      if (stop || performance.now() - t0 > delay + 1500) return;
+      if (performance.now() - t0 > delay && Math.abs(target.getBoundingClientRect().top - want) > 4) target.scrollIntoView({ behavior: "auto" });
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
   function bindAnchors() {
     document.addEventListener("click", (e) => {
@@ -923,22 +1116,27 @@
     const opts = LB.slice().sort((a, b) => a.name.localeCompare(b.name)).map((d) => `<option value="${d.ba}">${d.name} (${d.area})</option>`).join("");
     $("#regionSel").innerHTML = opts;
     $("#compareSel").innerHTML = `<option value="">None</option>` + opts;
-    $("#regionSel").addEventListener("change", (e) => select(e.target.value));
-    $("#compareSel").addEventListener("change", (e) => { compare = e.target.value; renderCompare(); });
+    $("#regionSel").addEventListener("change", (e) => { select(e.target.value); syncView(); });
+    $("#compareSel").addEventListener("change", (e) => { compare = e.target.value; renderCompare(); syncView(); });
+    $("#linkBtn").addEventListener("click", (e) => copyText(viewLink(), e.currentTarget, "Link copied"));
     $$("#rangeSeg button").forEach((b) => b.addEventListener("click", () => {
-      rangeDays = +b.dataset.d; $$("#rangeSeg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); renderExplorer();
+      rangeDays = +b.dataset.d; $$("#rangeSeg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); renderExplorer(); syncView();
     }));
     $("#csvBtn").addEventListener("click", downloadCSV);
     $$("#filters .chip").forEach((b) => b.addEventListener("click", () => setFilter(b.dataset.f)));
     $("#showSuspect").addEventListener("change", renderTable);
     $("#peakMore").addEventListener("click", () => { peakAll = !peakAll; renderPeaks(); });
     $("#lbMore").addEventListener("click", () => { tableAll = !tableAll; renderTable(); if (!tableAll) $("#lb").scrollIntoView({ block: "nearest" }); });
-    selected = (LB.find((d) => d.ba === "ERCO") || LB[0]).ba;
+    selected = savedBA() || (LB.find((d) => d.ba === "ERCO") || LB[0]).ba;
+    renderFindGrid();
+    viewFromHash();
     $("#regionSel").value = selected;
     renderAll();
     renderTicker();
     lazyRender();
-    scrollSpy(); observeReveal(); bindAnchors();
+    scrollSpy(); observeReveal(); bindAnchors(); bindGlossary();
+    ["top", "scoreboard", "method", "why", "live"].forEach((id) => glossify(document.getElementById(id)));
+    $("#findLink").addEventListener("click", () => setTimeout(() => $("#stateSel").focus({ preventScroll: true }), reduceMotion ? 50 : 700));
     document.addEventListener("themechange", renderAll);
     let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => {
       renderHeroChart(); if (drawn.has("explore")) renderExplorer(); if (drawn.has("when")) renderWhen(); if (drawn.has("peaks")) renderPeaks(); if (game.s) drawGame(); }, 200); });

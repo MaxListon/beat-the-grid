@@ -593,3 +593,34 @@ h2{max-width:14.43em}
     --grid:#d8d2c4;--axis:#9d9483;--link:#1b4f97;--ours:#2a6fd0;--official:#e2612a;--actual:#111;--hl:rgba(245,197,24,.45)}
   body{background:#fff;color:#111}
 }
+/* Phone menu, theme icon, reading progress, back to top */
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:40px;padding:0;min-height:38px}
+.menu-btn{display:none;align-items:center;gap:8px;margin-left:auto}
+@media (max-width:900px){.menu-btn{display:inline-flex}#themeBtn{margin-left:0}}
+.topnav{position:sticky}
+.menu-panel{position:absolute;left:0;right:0;top:100%;background:var(--page);border-bottom:1px solid var(--ink);box-shadow:0 12px 24px rgba(0,0,0,.12);padding:6px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:0 16px;max-height:calc(100vh - 120px);overflow:auto}
+.menu-panel a{display:flex;gap:10px;align-items:baseline;padding:11px 4px;border-bottom:1px solid var(--grid);color:var(--ink);text-decoration:none;font-weight:500}
+.menu-panel a span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.menu-panel a:hover,.menu-panel a:focus-visible{background:color-mix(in srgb,var(--volt) 22%,transparent)}
+@media (max-width:420px){.menu-panel{grid-template-columns:1fr}}
+@media (min-width:901px){.menu-panel{display:none!important}}
+.progress{position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--volt);transform-origin:0 50%;transform:scaleX(0);pointer-events:none}
+.to-top{position:fixed;right:18px;bottom:18px;z-index:35;width:44px;height:44px;display:grid;place-items:center;background:var(--ink);color:var(--page);border-radius:2px;box-shadow:3px 3px 0 var(--volt);text-decoration:none}
+.to-top:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--volt)}
+@media print{.progress,.to-top,.menu-btn,.menu-panel{display:none!important}}
+.game-chart:focus-visible{outline:3px solid var(--you);outline-offset:4px}
+.game-keys{margin:0 0 var(--s2)}
+/* Find your grid */
+.find-grid{display:flex;flex-wrap:wrap;gap:var(--s3) var(--s5);align-items:flex-end;padding:0 0 var(--s4);margin:0 0 var(--s4);border-bottom:1px solid var(--grid)}
+.find-grid select{min-width:220px}
+.find-out{flex:1;min-width:260px;margin:0;font-size:15px;color:var(--ink2)}
+.find-out:empty{display:none}
+.find-out b{color:var(--ink);background:linear-gradient(transparent 60%,var(--hl) 60%,var(--hl) 94%,transparent 94%)}
+.game-share{margin:var(--s4) 0 0}
+#linkBtn{min-height:42px}
+/* Jargon with a plain-language definition */
+.term{text-decoration:underline dotted;text-decoration-color:var(--muted);text-decoration-thickness:1.5px;text-underline-offset:3px;cursor:help;border-radius:2px}
+.term:hover,.term:focus-visible{text-decoration-color:var(--ink);background:var(--hl);outline:none}
+.tip .def{color:var(--ink2);max-width:34ch;font-size:13px;line-height:1.5}
+.follow{font-family:var(--mono);font-size:13px;color:var(--ink2);margin:calc(-1 * var(--s4)) 0 var(--s5)}
+.follow a{color:var(--volt)}

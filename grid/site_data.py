@@ -228,6 +228,7 @@ def build_live(eia: pd.DataFrame, scores: pd.DataFrame) -> None:
     live["voided"] = [{"date": k, **v} for k, v in voided(FORECASTS).items()]
     live["updated_at"] = now.strftime("%Y-%m-%d %H:%M UTC")
     _dump("live.json", live)
+    write_feed(live)
     write_sitemap(now.strftime("%Y-%m-%d"))
 
 
@@ -294,6 +295,55 @@ def weekly_summary(scores: pd.DataFrame, days: int = 7) -> dict | None:
 
 
 SITE = "https://maxliston.github.io/beat-the-grid/"
+
+
+def write_feed(live: dict, max_items: int = 40) -> None:
+    """docs/feed.xml: an RSS feed of the live contest, one item per issued forecast and one per scored day, so people
+    can follow it in a feed reader. Built only from the public forecast files and live.json; dates are fixed per item."""
+    from email.utils import format_datetime
+    from xml.sax.saxutils import escape
+
+    lb = {r["ba"]: r for r in json.loads((SITE_DATA / "leaderboard.json").read_text())}
+    day = lambda d: pd.Timestamp(d).strftime("%a %b %-d")  # noqa: E731
+    items = []
+    for f in live_files(FORECASTS, "20??-??-??.why.json"):
+        target = f.name[:10]
+        regions = json.loads(f.read_text().replace("NaN", "null")).get("regions", {})
+        if not regions:
+            continue
+        csv = FORECASTS / f"{target}.csv"
+        issued = pd.Timestamp(pd.read_csv(csv, nrows=1).issued_at_utc.iloc[0]) if csv.exists() else pd.Timestamp(target) - pd.Timedelta(hours=12)
+        if issued.tzinfo is None:
+            issued = issued.tz_localize("UTC")
+        top = sorted(regions.items(), key=lambda kv: -kv[1]["avg_mw"])[:8]
+        rows = "".join(f"<li><b>{escape(lb.get(ba, {}).get('name', ba))}</b>: average {r['avg_mw'] / 1000:.1f} GW, peak "
+                       f"{r['peak_mw'] / 1000:.1f} GW around {r['peak_hour']}:00 local ({r['vs_last_week'] * 100:+.1f}% vs last week)</li>"
+                       for ba, r in top)
+        pjm = regions.get("PJM")
+        title = f"Forecast for {day(target)}" + (f": PJM peak {pjm['peak_mw'] / 1000:.0f} GW around {pjm['peak_hour']}:00" if pjm else "")
+        items.append((issued, f"forecast-{target}", title, f"{SITE}#live",
+                      f"<p>Published {issued:%Y-%m-%d %H:%M} UTC, before the day began, for {len(regions)} regions. The largest:</p><ul>{rows}</ul>"
+                      f"<p>Every forecast: <a href=\"https://github.com/MaxListon/beat-the-grid/tree/main/forecasts\">forecasts/</a></p>"))
+    for d in live.get("by_day", []):
+        won = d["mape_ours"] < d["mape_official"]
+        when = pd.Timestamp(d["date"], tz="UTC") + pd.Timedelta(days=2, hours=12)       # roughly when EIA's full-day data allows scoring
+        items.append((when, f"score-{d['date']}", f"Scored {day(d['date'])}: {'my model' if won else 'the operators'} closer "
+                      f"({d['mape_ours'] * 100:.2f}% vs {d['mape_official'] * 100:.2f}%)", f"{SITE}#live",
+                      f"<p>Demand-weighted error over {d['regions']} regions: my model {d['mape_ours'] * 100:.2f}%, the official "
+                      f"forecasts {d['mape_official'] * 100:.2f}%. My model was closer in {d['regions_won']} of {d['regions']} regions.</p>"))
+    items.sort(key=lambda it: it[0], reverse=True)
+    out = ['<?xml version="1.0" encoding="UTF-8"?>', '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>',
+           "<title>Beat the Grid: the live record</title>", f"<link>{SITE}</link>",
+           f'<atom:link href="{SITE}feed.xml" rel="self" type="application/rss+xml"/>',
+           "<description>A daily electricity demand forecast for 34 US grid regions, published before each day begins, and how it scored against the grid operators.</description>",
+           "<language>en-us</language>"]
+    if items:
+        out.append(f"<lastBuildDate>{format_datetime(items[0][0].to_pydatetime())}</lastBuildDate>")
+    for when, guid, title, link, body in items[:max_items]:
+        out.append(f"<item><title>{escape(title)}</title><link>{link}</link><guid isPermaLink=\"false\">{guid}</guid>"
+                   f"<pubDate>{format_datetime(when.to_pydatetime())}</pubDate><description>{escape(body)}</description></item>")
+    out.append("</channel></rss>")
+    (SITE_DATA.parent / "feed.xml").write_text("\n".join(out) + "\n")
 LEGAL_UPDATED = "2026-11-15"
 
 
