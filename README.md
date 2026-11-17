@@ -1,4 +1,4 @@
-# ⚡ Beat the Grid
+<h1><img src="docs/favicon.svg" width="34" height="34" alt="" align="top"> Beat the Grid</h1>
 
 [![Live site](https://img.shields.io/badge/live%20site-maxliston.github.io%2Fbeat--the--grid-1c5cab)](https://maxliston.github.io/beat-the-grid/)
 [![Daily forecast](https://github.com/MaxListon/beat-the-grid/actions/workflows/daily.yml/badge.svg)](https://github.com/MaxListon/beat-the-grid/actions/workflows/daily.yml)

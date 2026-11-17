@@ -126,6 +126,28 @@ def _chart(d: ImageDraw.ImageDraw, box, k: float) -> None:
         lx += 24 * k + d.textlength(label, font=font("sans", 14 * k)) + 22 * k
 
 
+def _bezier(p0, p1, p2, p3, n=40):
+    return [tuple((1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b_ + 3 * (1 - t) * t ** 2 * c + t ** 3 * e
+                  for a, b_, c, e in zip(p0, p1, p2, p3)) for t in (i / n for i in range(n + 1))]
+
+
+def _mark(d: ImageDraw.ImageDraw, x: float, y: float, size: float) -> None:
+    """The logo (docs/favicon.svg): two forecasts racing to one point. The ink line lands on the dot (what
+    actually happened); the orange one, the official forecast, ends just off it. Same 64-unit coordinates."""
+    u = size / 64
+    P = lambda pts: [(x + px * u, y + py * u) for px, py in pts]  # noqa: E731
+    d.rounded_rectangle([x, y, x + size, y + size], radius=12 * u, fill=VOLT)
+    official = _bezier((9, 47), (18, 47), (22, 23), (30, 23)) + _bezier((30, 23), (38, 23), (39, 41), (49, 44))
+    mine = _bezier((9, 41), (18, 41), (22, 16), (31, 16)) + _bezier((31, 16), (40, 16), (40, 33), (50, 33))
+    for pts, col, wdt in ((official, ORANGE, 5), (mine, INK, 5.5)):
+        d.line(P(pts), fill=col, width=round(wdt * u), joint="curve")
+        for cx, cy in (P(pts)[0], P(pts)[-1]):                        # round caps
+            r = wdt * u / 2
+            d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=col)
+    cx, cy = P([(51, 33)])[0]
+    d.ellipse([cx - 6.5 * u, cy - 6.5 * u, cx + 6.5 * u, cy + 6.5 * u], fill=INK)
+
+
 def draw(w: int, h: int) -> Image.Image:
     hd = json.loads((SITE_DATA / "summary.json").read_text())["headline"]
     k = 2 * w / 1200                      # draw at 2x, scale down at the end
@@ -139,9 +161,7 @@ def draw(w: int, h: int) -> Image.Image:
     m = 58 * k
     # brand + eyebrow
     b = 40 * k
-    d.rounded_rectangle([m, m, m + b, m + b], radius=8 * k, fill="#1c5cab")
-    pts = [(.57, .10), (.21, .57), (.44, .57), (.37, .91), (.79, .41), (.57, .41), (.63, .10)]
-    d.polygon([(m + x * b, m + y * b) for x, y in pts], fill=VOLT)
+    _mark(d, m, m, b)
     d.text((m + b + 14 * k, m + 4 * k), "Beat the Grid", font=font("serif", 28 * k), fill=INK)
     d.text((m, m + b + 30 * k), "OPEN FORECASTING CONTEST · 34 US GRID REGIONS", font=font("mono", 14 * k), fill=INK2)
     # the question, with the site's highlighted italic

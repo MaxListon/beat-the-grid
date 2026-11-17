@@ -23,6 +23,7 @@ CHANGELOG = [
     ]),
     ("site", "2026-11-16", [
         "New editorial design: Newsreader headlines with IBM Plex text and data labels (all self-hosted), numbered sections, and a live ticker of each region's forecast.",
+        "New logo: two forecasts racing to one point. The ink line (my model) lands on the dot, what actually happened; the orange one (the official forecast) ends just off it.",
         "One color scheme throughout: blue for my model, orange for the operators (the map and result tags used green and red).",
         "Shorter tables with 'Show all', readable dates, a larger hero chart, a dark band for the live record, and table rows that become cards on phones.",
         "Fixed menu links landing short of their section, and stale cache stamps on the site's scripts.",
