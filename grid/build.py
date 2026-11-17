@@ -10,7 +10,6 @@ import json
 import pandas as pd
 
 from . import assets, backtest, eia, model, og_image, pages, site_data, weather
-from .config import MODELS, PROCESSED
 from .live import FROZEN
 
 

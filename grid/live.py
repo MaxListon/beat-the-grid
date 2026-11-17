@@ -9,13 +9,12 @@ The model in models/frozen/ was trained once, before launch, and is never retune
 """
 import datetime as dt
 import json
-from pathlib import Path
 
 import pandas as pd
 
 from . import eia as eia_mod
 from . import model, weather
-from .config import FORECASTS, ISSUE_HOUR_UTC, MODELS, PROCESSED, live_files
+from .config import FORECASTS, ISSUE_HOUR_UTC, MODELS, live_files
 from .features import build_region
 from .regions import REGIONS, unique_points
 

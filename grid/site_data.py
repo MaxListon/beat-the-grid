@@ -11,8 +11,8 @@ import json
 import numpy as np
 import pandas as pd
 
-from .config import BACKTEST_START, FORECASTS, PROCESSED, SITE_DATA, live_files, voided
 from . import blend, misses, peaks, sql_data, value
+from .config import BACKTEST_START, FORECASTS, PROCESSED, SITE_DATA, live_files, voided
 from .evaluate import breakdowns, headline, leaderboard, scoreable
 from .regions import REGIONS, region_points
 from .stats import diebold_mariano
@@ -134,7 +134,8 @@ def update_readme(summary: dict) -> None:
            f"{h['strict']['blend_beats_official']} of {h['strict']['regions']})." if 'strict' in h else ".")
         + (f" Annualised, that is {h['value']['gwh_official'] / 1000:.0f} TWh of mis-forecast electricity for the official forecasts vs "
            f"{h['value']['gwh_blend'] / 1000:.0f} TWh blended. At 2026 wholesale prices that energy is worth about "
-           f"${h['value']['usd_official'] / 1e9:.1f} billion vs ${h['value']['usd_blend'] / 1e9:.1f} billion a year (an illustration of scale, not a cost estimate)." if 'value' in h else ""),
+           f"${h['value']['usd_official'] / 1e9:.1f} billion vs ${h['value']['usd_blend'] / 1e9:.1f} billion a year "
+           "(an illustration of scale, not a cost estimate)." if 'value' in h else ""),
         "",
         f"**Strict check.** Limited to the {h['strict']['regions']} regions whose official forecast is clearly genuine "
         f"(median error ≤ {h['strict']['threshold'] * 100:.0f}%, {h['strict']['share_of_demand'] * 100:.0f}% of demand): "
@@ -335,7 +336,8 @@ def write_feed(live: dict, max_items: int = 40) -> None:
     out = ['<?xml version="1.0" encoding="UTF-8"?>', '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>',
            "<title>Beat the Grid: the live record</title>", f"<link>{SITE}</link>",
            f'<atom:link href="{SITE}feed.xml" rel="self" type="application/rss+xml"/>',
-           "<description>A daily electricity demand forecast for 34 US grid regions, published before each day begins, and how it scored against the grid operators.</description>",
+           "<description>A daily electricity demand forecast for 34 US grid regions, published before each day begins, "
+           "and how it scored against the grid operators.</description>",
            "<language>en-us</language>"]
     if items:
         out.append(f"<lastBuildDate>{format_datetime(items[0][0].to_pydatetime())}</lastBuildDate>")

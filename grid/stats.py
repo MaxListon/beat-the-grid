@@ -52,7 +52,7 @@ def holm(pvals: dict[str, float]) -> dict[str, float]:
     for i, (p, k) in enumerate(items):
         running = max(running, min(1.0, (m - i) * p))
         out[k] = running
-    for k, p in pvals.items():
+    for k in pvals:
         out.setdefault(k, float("nan"))
     return out
 

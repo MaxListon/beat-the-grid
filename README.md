@@ -8,6 +8,16 @@
 
 **Can one open model forecast tomorrow's electricity demand better than America's grid operators?**
 
+### The project in 30 seconds
+
+| | |
+|---|---|
+| **Problem** | Every US grid operator publishes a day-ahead forecast of hourly electricity demand, and those forecasts decide which power plants run. How good are they, and can an open model match them under fair rules? |
+| **Approach** | One LightGBM model built only from public data (EIA demand, archived weather *forecasts*), allowed to see only what it would have known at 06:00 UTC the day before. Walk-forward backtest over 696,190 region-hours in 34 regions, judged with Diebold-Mariano tests and Holm correction. |
+| **Result** | Lower error where most electricity is used (3.08% vs 3.68%, weighted by demand), but a split decision region by region (12 wins, 14 losses, 5 ties), and the operators are better at the daily peak. A blend of both cuts the operators' error by a third. |
+| **What went wrong** | The first live forecast read stale demand data, so I voided it before its day began, kept it in the public log, and fixed the data feed. Then I added backup runs, pinned versions and a guard against issuing too early. |
+| **What I learned** | A fair benchmark is most of the work: data cutoffs, significance tests and an honest live record matter more than model tweaks. And the most useful result wasn't "beat the operator" but "combine with the operator". |
+
 Every day, each US balancing authority (the organization that keeps its region's grid in balance) publishes a day-ahead forecast of hourly electricity demand. This project builds one machine-learning model, gives it **only the information it would have had the morning before**, and scores it against those official forecasts across **34 grid regions**. They cover nearly all US electricity demand. Then it runs live: a new forecast is published every day and committed to this repo **before** the day it predicts.
 
 **Website:** https://maxliston.github.io/beat-the-grid/ · **Write-up:** [WRITEUP.md](WRITEUP.md) · **Notebook:** [analysis.ipynb](notebooks/analysis.ipynb) · **Data dictionary:** [DATA.md](DATA.md) · **Every live forecast:** [forecasts/](forecasts/)
@@ -107,8 +117,12 @@ python3 -m venv ~/.venvs/beat-the-grid && source ~/.venvs/beat-the-grid/bin/acti
 pip install -r requirements.txt
 python -m grid.build      # download data, backtest, build site data, freeze the model (~3 h, mostly weather download)
 python -m grid.live       # what the daily job runs
-pytest                    # 36 tests: fairness, statistics, live-record rules (also run on every push)
+pytest                    # 38 tests: fairness, statistics, live-record rules
+ruff check .              # Python lint
+npm ci && npm run lint && npm run test:browser   # the website: ESLint, then 12 browser tests in real Chrome
 ```
+
+All of these run on every push ([Tests workflow](.github/workflows/tests.yml)).
 
 Raw downloads go to `~/.cache/beat-the-grid` (override with `GRID_CACHE`). On macOS, LightGBM needs `brew install libomp`.
 
@@ -142,10 +156,12 @@ flowchart LR
 ```
 grid/            the pipeline (each file starts with a docstring saying what it does)
 tests/           fairness (no peeking at the future), statistics, live-record rules
+tests/e2e/       browser tests for the website (Node test runner + Puppeteer, real Chrome)
 notebooks/       analysis.ipynb: the main findings, step by step in pandas
 forecasts/       every live forecast (one CSV per target day) + live_scores.csv
 models/frozen/   the model used for every live forecast
 docs/            the website (GitHub Pages); docs/data/sql/ holds the Parquet tables
+docs/js/         the site's JavaScript as ES modules (charts, explorer, game, live record, ...)
 DATA.md          data dictionary: every table and column
 WRITEUP.md       the full write-up, including what didn't work
 ```

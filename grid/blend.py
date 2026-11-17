@@ -41,7 +41,7 @@ def fit_weights(hist: pd.DataFrame) -> dict:
 
 
 def apply(d: pd.DataFrame, weights: dict) -> np.ndarray:
-    w = np.array([weights.get((b, p), 0.5) for b, p in zip(d.ba, daypart(d.hour))])
+    w = np.array([weights.get((b, p), 0.5) for b, p in zip(d.ba, daypart(d.hour), strict=True)])
     return w * d.p50.to_numpy() + (1 - w) * d.official_fc.to_numpy()
 
 

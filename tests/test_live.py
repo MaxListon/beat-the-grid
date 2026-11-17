@@ -6,7 +6,6 @@ import pandas as pd
 import pytest
 
 from grid import live, model
-from grid.features import FEATURES
 
 from .test_fairness import synthetic
 
@@ -75,6 +74,7 @@ def test_live_weather_reaches_back_past_a_week():
 
 def test_why_file_has_no_nan():
     import json
+
     from grid.live import _no_nan
     out = json.dumps(_no_nan({"a": {"t": float("nan"), "x": 1.0}}), allow_nan=False)
     assert '"t": null' in out
@@ -82,6 +82,7 @@ def test_why_file_has_no_nan():
 
 def test_voided_days_are_not_scored_or_shown(tmp_path):
     import json
+
     from grid.config import live_files
     (tmp_path / "2026-11-16.csv").write_text("x")
     (tmp_path / "2026-11-17.csv").write_text("x")

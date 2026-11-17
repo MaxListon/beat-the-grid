@@ -20,5 +20,27 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt ruff==0.8.6
+      - name: Lint (ruff)
+        run: ruff check .
       - run: python -m pytest -q -W error::DeprecationWarning
+
+  website:
+    # ESLint for the site's JavaScript, then browser tests that drive real Chrome against the site:
+    # navigation, explorer, game, SQL console, 404 page and feed
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Lint (ESLint)
+        run: npm run lint
+      - name: Browser tests
+        run: npm run test:browser
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

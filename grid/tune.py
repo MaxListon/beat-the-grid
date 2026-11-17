@@ -25,6 +25,7 @@ def main() -> None:
     val = val[(val.demand > 0) & val.level168.notna()]
     tr = model.clean_train(train)
     import lightgbm as lgb
+
     from .features import FEATURES, TARGET
     ds = lgb.Dataset(tr[FEATURES], tr[TARGET], categorical_feature=["ba_code"], free_raw_data=False)
     results = []

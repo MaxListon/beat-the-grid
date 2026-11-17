@@ -1,0 +1,10 @@
+# Python linting (run: ruff check .). Checked on every push by the Tests workflow.
+line-length = 150
+target-version = "py312"
+extend-exclude = ["notebooks"]
+
+[lint]
+select = ["E", "F", "W", "B", "I"]    # pycodestyle, pyflakes, bugbear, import order
+
+[lint.per-file-ignores]
+"grid/pages.py" = ["E501"]            # changelog prose and the HTML page template

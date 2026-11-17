@@ -8,9 +8,9 @@ Weather columns are day-2 forecasts (published >= 48 h ahead), so they are alway
 The model predicts a *ratio*: demand / (mean demand over the 7 days before the cutoff).
 Ratios let one model learn across regions of very different sizes (PJM ~94 GW, JEA ~1.6 GW).
 """
+import holidays as hol
 import numpy as np
 import pandas as pd
-import holidays as hol
 
 from .config import DATA_CUTOFF_HOUR_UTC
 from .regions import REGIONS

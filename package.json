@@ -1,0 +1,16 @@
+{
+  "name": "beat-the-grid-site-tooling",
+  "private": true,
+  "description": "Checks for the website in docs/: ESLint for its JavaScript, and browser tests that drive real Chrome",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint docs/js docs/site.js docs/sql.js docs/contact.js docs/config.js tests/e2e",
+    "test:browser": "node --test --test-concurrency=1 tests/e2e/site.test.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.15.0",
+    "eslint": "9.15.0",
+    "globals": "15.12.0",
+    "puppeteer-core": "23.11.1"
+  }
+}

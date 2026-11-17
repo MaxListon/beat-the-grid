@@ -23,6 +23,7 @@ CHANGELOG = [
     ]),
     ("site", "2026-11-16", [
         "New editorial design: Newsreader headlines with IBM Plex text and data labels (all self-hosted), numbered sections, and a live ticker of each region's forecast.",
+        "Engineering: the site's JavaScript is now ES modules, and every push runs ruff, ESLint, the Python tests and 12 browser tests in real Chrome.",
         "Easier to use: a section menu on phones, 'Find your grid' by state, links that open an exact explorer view, plain-language definitions for the jargon, keyboard play and score sharing in the game, an RSS feed of the live record, a reading-progress line, back-to-top and a sun/moon theme switch.",
         "New: 'Can you beat the model?', a game where you draw your own forecast for a real past day and get scored against my model and the grid operator.",
         "Charts now label their own key points (best and worst hours and months, the live forecast's peak), a short 'Why I built this' note, and a 404 page that has lost power.",

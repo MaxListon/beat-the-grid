@@ -38,7 +38,7 @@ def observed_temp(ba: str, day: pd.Timestamp) -> pd.Series:
     """Hourly observed temperature (local day, population-weighted), from the reanalysis archive."""
     tz = REGIONS[ba]["tz"]
     parts, total = None, 0.0
-    for name, lat, lon, w in region_points(ba):
+    for _name, lat, lon, w in region_points(ba):
         r = requests.get(ARCHIVE, params={"latitude": lat, "longitude": lon, "start_date": day.date().isoformat(),
                                           "end_date": day.date().isoformat(), "hourly": "temperature_2m",
                                           "timezone": tz}, timeout=120, headers={"User-Agent": "beat-the-grid/1.0"})
@@ -80,7 +80,8 @@ def describe(row, fc_temp: pd.Series, obs_temp: pd.Series, holidays: set) -> str
     if row.official > row.mine * 0.7:
         bits.append(f"The official forecast also struggled ({row.official * 100:.1f}% error), which points to a genuinely unusual day.")
     else:
-        bits.append(f"The official forecast handled it much better ({row.official * 100:.1f}% error): the operator likely knew something my inputs don't capture.")
+        bits.append(f"The official forecast handled it much better ({row.official * 100:.1f}% error): "
+                    "the operator likely knew something my inputs don't capture.")
     day = row.local_date.date()
     if day in holidays:
         bits.append("It was a holiday.")

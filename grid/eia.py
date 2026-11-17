@@ -81,7 +81,7 @@ def realtime(bas: list[str], start: dt.date, end: dt.date, batch: int = 8) -> pd
                              capture_output=True, text=True, check=True).stdout
         for series in json.loads(out)[0]["data"]:
             v = series["VALUES"]
-            for t, x in zip(v["DATES"], v["DATA"]):
+            for t, x in zip(v["DATES"], v["DATA"], strict=False):   # never let a malformed reply crash the daily job
                 if x is not None:
                     rows.append((series["RESPONDENT_ID"], series["TYPE_ID"], t, float(x)))
     if not rows:

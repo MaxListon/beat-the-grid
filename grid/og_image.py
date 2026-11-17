@@ -128,7 +128,7 @@ def _chart(d: ImageDraw.ImageDraw, box, k: float) -> None:
 
 def _bezier(p0, p1, p2, p3, n=40):
     return [tuple((1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b_ + 3 * (1 - t) * t ** 2 * c + t ** 3 * e
-                  for a, b_, c, e in zip(p0, p1, p2, p3)) for t in (i / n for i in range(n + 1))]
+                  for a, b_, c, e in zip(p0, p1, p2, p3, strict=True)) for t in (i / n for i in range(n + 1))]
 
 
 def _mark(d: ImageDraw.ImageDraw, x: float, y: float, size: float) -> None:
@@ -144,11 +144,12 @@ def _mark(d: ImageDraw.ImageDraw, x: float, y: float, size: float) -> None:
         d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=col)
     pts = P(official)
     d.line(pts, fill="#3d3550", width=round(5 * u), joint="curve")
-    dot(*pts[0], 2.5 * u, "#3d3550"); dot(*pts[-1], 2.5 * u, "#3d3550")
+    dot(*pts[0], 2.5 * u, "#3d3550")
+    dot(*pts[-1], 2.5 * u, "#3d3550")
     pts = P(mine)
     a, b = (0x6d, 0x3d, 0xf5), (0xd1, 0x6c, 0xff)                       # violet -> fuchsia, left to right
     x0, x1 = pts[0][0], pts[-1][0]
-    for p0, p1 in zip(pts, pts[1:]):
+    for p0, p1 in zip(pts, pts[1:], strict=False):          # consecutive points
         t = ((p0[0] + p1[0]) / 2 - x0) / (x1 - x0)
         col = tuple(round(a[c] + (b[c] - a[c]) * t) for c in range(3))
         d.line([p0, p1], fill=col, width=round(5.5 * u))

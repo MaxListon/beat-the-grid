@@ -76,7 +76,7 @@ def region_features(ev: pd.DataFrame, target_days: pd.DatetimeIndex) -> pd.DataF
         w = w / w.sum()
         now = np.zeros(len(issue))
         recent = np.zeros(len(issue))
-        for (name, *_), wt in zip(r["points"], w):
+        for (name, *_), wt in zip(r["points"], w, strict=True):
             e = ev[ev.point == name]
             if e.empty:
                 continue

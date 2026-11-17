@@ -58,6 +58,6 @@ def test_cutoff_is_before_issue_time_and_target_day():
 def test_backtest_folds_train_only_on_the_past():
     blocks = list(folds(pd.Timestamp("2026-10-31")))
     assert blocks[0][0] == pd.Timestamp("2024-07-01")
-    for (s1, e1), (s2, _) in zip(blocks, blocks[1:]):
+    for (_, e1), (s2, _) in zip(blocks, blocks[1:], strict=False):
         assert e1 == s2                          # contiguous, no gaps or overlaps
     assert blocks[-1][1] == pd.Timestamp("2026-11-01")

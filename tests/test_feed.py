@@ -7,7 +7,8 @@ from grid import site_data
 
 def test_feed_lists_forecasts_and_scores(tmp_path, monkeypatch):
     data, fc = tmp_path / "data", tmp_path / "forecasts"
-    data.mkdir(); fc.mkdir()
+    data.mkdir()
+    fc.mkdir()
     (data / "leaderboard.json").write_text(json.dumps([{"ba": "PJM", "name": "PJM Interconnection", "mean_mw": 90000, "suspect_official": False}]))
     (fc / "2026-11-17.csv").write_text("issued_at_utc,ba,ts_utc,local_hour,p10,p50,p90\n2026-11-16T14:50Z,PJM,2026-11-17T06:00Z,0,1,2,3\n")
     (fc / "2026-11-17.why.json").write_text(json.dumps({"target": "2026-11-17", "regions": {"PJM": {
