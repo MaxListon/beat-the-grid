@@ -21,7 +21,7 @@ from .config import CACHE, SITE_DATA
 ROOT = SITE_DATA.parent.parent
 FONT_DIR = SITE_DATA.parent / "fonts"
 PAPER, SURFACE, INK, INK2, MUTED, GRID, RULE = "#f4f0e6", "#faf8f2", "#191612", "#48423a", "#655e53", "#dcd4c3", "#ece6d8"
-BLUE, BAND, ORANGE, LIVE, VOLT, HL = "#2a6fd0", "#d3dff0", "#e2612a", "#e6ebf2", "#f5c518", "#f8de86"
+BLUE, BAND, ORANGE, LIVE, HL = "#2a6fd0", "#d3dff0", "#e2612a", "#e6ebf2", "#ddd0ff"   # HL: the violet highlighter
 FALLBACK = {"serif": "/System/Library/Fonts/Supplemental/Georgia Bold.ttf", "serif-italic": "/System/Library/Fonts/Supplemental/Georgia Italic.ttf",
             "sans": "/System/Library/Fonts/Supplemental/Arial.ttf", "mono": "/System/Library/Fonts/Menlo.ttc"}
 

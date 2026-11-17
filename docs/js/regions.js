@@ -1,7 +1,7 @@
 /* Region by region: the map and the sortable results table. */
-import { st } from "./state.js?v=b26b5e6139";
-import { $, $$, MINUS, VERDICT, css, fail, gw, hideTip, pct, reduceMotion, row, showTip } from "./util.js?v=b26b5e6139";
-import { select } from "./explorer.js?v=b26b5e6139";
+import { st } from "./state.js?v=45fc8122f9";
+import { $, $$, MINUS, VERDICT, css, fail, gw, hideTip, pct, reduceMotion, row, showTip } from "./util.js?v=45fc8122f9";
+import { select } from "./explorer.js?v=45fc8122f9";
 
 const MAPBASE = "https://cdn.jsdelivr.net/npm/us-atlas@3.0.1/states-albers-10m.json";
 let US = null, filter = "all", sortKey = "mean_mw", sortDir = -1, tableAll = false;

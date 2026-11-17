@@ -1,8 +1,8 @@
 /* The top of the page: status pill, version badges, hero findings and chart, scoreboard and the live ticker. */
-import { st } from "./state.js?v=b26b5e6139";
-import { $, MINUS, fail, fd, gw, pct, reduceMotion, relDay } from "./util.js?v=b26b5e6139";
-import { drawSeries, expand, legendHTML, loadSeries, slice } from "./charts.js?v=b26b5e6139";
-import { select } from "./explorer.js?v=b26b5e6139";
+import { st } from "./state.js?v=45fc8122f9";
+import { $, MINUS, fail, fd, gw, pct, reduceMotion, relDay } from "./util.js?v=45fc8122f9";
+import { drawSeries, expand, legendHTML, loadSeries, slice } from "./charts.js?v=45fc8122f9";
+import { select } from "./explorer.js?v=45fc8122f9";
 
 /* ---------- status pill + version ---------- */
 export function renderStatus() {

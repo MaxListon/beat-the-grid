@@ -23,6 +23,7 @@ CHANGELOG = [
     ]),
     ("site", "2026-11-16", [
         "New editorial design: Newsreader headlines with IBM Plex text and data labels (all self-hosted), numbered sections, and a live ticker of each region's forecast.",
+        "Brand accent changed from yellow to the logo's violet; buttons and labels use the text face (mono is kept for data); the 'Better together' table shows 10 regions with 'Show all'.",
         "Engineering: the site's JavaScript is now ES modules, and every push runs ruff, ESLint, the Python tests and 12 browser tests in real Chrome.",
         "Easier to use: a section menu on phones, 'Find your grid' by state, links that open an exact explorer view, plain-language definitions for the jargon, keyboard play and score sharing in the game, an RSS feed of the live record, a reading-progress line, back-to-top and a sun/moon theme switch.",
         "New: 'Can you beat the model?', a game where you draw your own forecast for a real past day and get scored against my model and the grid operator.",
@@ -63,14 +64,14 @@ BLACKOUT_HEAD = """<style>
 body.blackout-page{background:#0b0a09}
 .blackout{position:relative;min-height:68vh;display:grid;place-items:center;text-align:center;padding:72px 0;isolation:isolate}
 .blackout .lit{position:relative;z-index:3}
-.blackout .code{font-family:var(--mono);font-size:13px;letter-spacing:.04em;color:#f5c518;margin:0 0 14px}
+.blackout .code{font-family:var(--mono);font-size:13px;letter-spacing:.04em;color:#b39cff;margin:0 0 14px}
 .blackout h1{color:#f2ede3;max-width:none;margin:0 auto 14px;font-size:clamp(40px,7vw,84px)}
 .blackout .lede{color:#cbc3b5;margin:0 auto 28px;max-width:46ch}
-.blackout .power{display:inline-flex;align-items:center;gap:10px;background:#f5c518;color:#191612;font-weight:600;padding:12px 22px;border-radius:2px;text-decoration:none;box-shadow:0 0 0 6px rgba(245,197,24,.15),0 0 40px rgba(245,197,24,.35)}
+.blackout .power{display:inline-flex;align-items:center;gap:10px;background:#b39cff;color:#14120f;font-weight:600;padding:12px 22px;border-radius:2px;text-decoration:none;box-shadow:0 0 0 6px rgba(179,156,255,.15),0 0 40px rgba(179,156,255,.40)}
 .blackout .power::before{content:"";width:10px;height:10px;border-radius:50%;background:#c9412f;box-shadow:0 0 8px #c9412f}
 .blackout .hidden-room{position:absolute;inset:0;z-index:1;pointer-events:none;color:#efe9dc}
 .blackout .hidden-room span{position:absolute;font-family:var(--serif);font-style:italic;font-size:19px;opacity:.9}
-.blackout .hidden-room a{pointer-events:auto;color:#f5c518}
+.blackout .hidden-room a{pointer-events:auto;color:#b39cff}
 .blackout .mask{position:absolute;inset:-40px -100vw;z-index:2;pointer-events:none;
   background:radial-gradient(circle 150px at var(--x,50%) var(--y,40%),rgba(11,10,9,0) 0,rgba(11,10,9,.15) 55%,rgba(11,10,9,.97) 100%)}
 .blackout.on .mask{opacity:0;transition:opacity .5s}

@@ -1,8 +1,8 @@
 /* When the model wins: by hour, by month, on peak days; the peak contest; the blend; the worst days. */
-import { st } from "./state.js?v=b26b5e6139";
-import { $, $$, MINUS, VERDICT, css, fail, fd, hideTip, pct, row, showTip } from "./util.js?v=b26b5e6139";
-import { lineChart } from "./charts.js?v=b26b5e6139";
-import { observeReveal } from "./main.js?v=b26b5e6139";
+import { st } from "./state.js?v=45fc8122f9";
+import { $, $$, MINUS, VERDICT, css, fail, fd, hideTip, pct, row, showTip } from "./util.js?v=45fc8122f9";
+import { lineChart } from "./charts.js?v=45fc8122f9";
+import { observeReveal } from "./main.js?v=45fc8122f9";
 
 /* ---------- when we win ---------- */
 export function renderWhen() {
@@ -141,8 +141,13 @@ export function renderBlend() {
   const ramp = d3.interpolateRgb(dark ? "#1d2a3a" : "#e7f0fc", dark ? "#6da7ec" : "#1c5cab");
   const ink = (w) => (dark ? (w > 0.6 ? "#0b0b0b" : "#f0efec") : (w > 0.5 ? "#ffffff" : "#0b0b0b"));
   $("#blendTable").innerHTML = `<caption class="sr-only">Blend weights by region and time of day</caption><thead><tr><th>Region</th>${Object.values(parts).map((p) => `<th class="num">${p}</th>`).join("")}</tr></thead><tbody>` +
-    rows.map((d) => `<tr><td class="reg"><b>${d.name}</b><span>${d.ba}</span></td>` +
+    rows.map((d, i) => `<tr${i >= 10 ? ' class="extra"' : ""}><td class="reg"><b>${d.name}</b><span>${d.ba}</span></td>` +
       Object.keys(parts).map((k) => { const w = W[d.ba][k]; return `<td class="w" style="background:${ramp(w)};color:${ink(w)}" title="${d.name}, ${parts[k]}: ${Math.round(w * 100)}% my model">${Math.round(w * 100)}%</td>`; }).join("") + `</tr>`).join("") + `</tbody>`;
+  const more = $("#blendMore"), table = $("#blendTable");
+  more.hidden = rows.length <= 12;
+  const label = () => { const all = table.classList.contains("all"); more.textContent = all ? "Show the 10 largest only" : `Show all ${rows.length} regions`; more.setAttribute("aria-expanded", String(all)); };
+  label();
+  more.onclick = () => { table.classList.toggle("all"); label(); };
   const t = V.totals;
   $("#valueNote").innerHTML = (t ? `<p>Over a year, the official forecasts in these regions mis-forecast about <b>${d3.format(",.0f")(t.gwh_official / 1000)} TWh</b> of electricity; the blend, <b>${d3.format(",.0f")(t.gwh_blend / 1000)} TWh</b>. At average 2026 wholesale prices that energy is worth about <b>$${(t.usd_official / 1e9).toFixed(1)} billion</b> versus <b>$${(t.usd_blend / 1e9).toFixed(1)} billion</b> a year. That's an illustration of scale, not a cost estimate: the real cost of forecast errors depends on reserves and balancing markets and is a fraction of the energy's value. Prices: ${V.price_source}.</p>` : "") +
     `<p>How it was tested: for each quarter, the weights were learned only from earlier quarters, where my forecasts were themselves out-of-sample. The first quarter used a plain 50/50 average. This answers a different question from the contest (the operator's forecast may be published after my issue time): how much would an operator gain by adding my model to its own?</p>`;
