@@ -8,7 +8,7 @@
  */
 window.SITE_CONFIG = {
   formEndpoint: "",
-  goatcounter: "",
+  goatcounter: "maxliston",
   linkedin: "https://linkedin.com/in/maxwell-liston",
   repo: "https://github.com/MaxListon/beat-the-grid",
 };
