@@ -1,5 +1,5 @@
 /* Plain-language definitions for the jargon, shown on hover, tap or keyboard focus (first use in each section). */
-import { hideTip, showTip } from "./util.js?v=1769863934";
+import { hideTip, showTip } from "./util.js?v=3f8233ccc6";
 
 /* ---------- plain-language definitions for the jargon (first use in each section) ---------- */
 export const GLOSSARY = [

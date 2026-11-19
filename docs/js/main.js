@@ -1,13 +1,13 @@
 /* Start-up and navigation: loads the data, draws sections lazily as they approach, and makes in-page jumps land exactly. */
-import { st } from "./state.js?v=1769863934";
-import { $, $$, copyText, fail, reduceMotion } from "./util.js?v=1769863934";
-import { renderFindings, renderHeroChart, renderLiveStrip, renderScoreboard, renderStatus, renderTicker, renderVersion } from "./overview.js?v=1769863934";
-import { renderMap, renderTable, setFilter, toggleTable } from "./regions.js?v=1769863934";
-import { downloadCSV, renderCompare, renderExplorer, renderFindGrid, savedBA, select, syncView, viewFromHash, viewLink } from "./explorer.js?v=1769863934";
-import { bindGlossary, glossify } from "./glossary.js?v=1769863934";
-import { drawGame, game, renderGame } from "./game.js?v=1769863934";
-import { renderBlend, renderMisses, renderPeaks, renderWhen, togglePeaks } from "./analysis.js?v=1769863934";
-import { renderLive } from "./live.js?v=1769863934";
+import { st } from "./state.js?v=3f8233ccc6";
+import { $, $$, copyText, fail, reduceMotion } from "./util.js?v=3f8233ccc6";
+import { renderFindings, renderHeroChart, renderLiveStrip, renderScoreboard, renderStatus, renderTicker, renderVersion } from "./overview.js?v=3f8233ccc6";
+import { renderMap, renderTable, setFilter, toggleTable } from "./regions.js?v=3f8233ccc6";
+import { downloadCSV, renderCompare, renderExplorer, renderFindGrid, savedBA, select, syncView, viewFromHash, viewLink } from "./explorer.js?v=3f8233ccc6";
+import { bindGlossary, glossify } from "./glossary.js?v=3f8233ccc6";
+import { drawGame, game, renderGame } from "./game.js?v=3f8233ccc6";
+import { renderBlend, renderMisses, renderPeaks, renderWhen, togglePeaks } from "./analysis.js?v=3f8233ccc6";
+import { renderLive } from "./live.js?v=3f8233ccc6";
 
 /* ---------- page behaviour: side menu, reveal ---------- */
 export function scrollSpy() {

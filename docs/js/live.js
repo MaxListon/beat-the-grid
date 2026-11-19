@@ -1,7 +1,7 @@
 /* The live record: track-record calendar, live versus backtest, weekly summary, region table and voided forecasts. */
-import { st } from "./state.js?v=1769863934";
-import { $, css, fd, hideTip, pct, row, showTip } from "./util.js?v=1769863934";
-import { goExplore } from "./regions.js?v=1769863934";
+import { st } from "./state.js?v=3f8233ccc6";
+import { $, css, fd, hideTip, pct, row, showTip } from "./util.js?v=3f8233ccc6";
+import { goExplore } from "./regions.js?v=3f8233ccc6";
 
 /* ---------- live ---------- */
 export function voidNote(L) {
@@ -105,7 +105,7 @@ export function calendarHTML(days) {
   return `<div class="track"><div class="track-head"><h3>Track record</h3>` +
     `<span class="key"><i class="sw" style="background:var(--ours)"></i>My model closer</span><span class="key"><i class="sw" style="background:var(--official)"></i>Official closer</span></div>` +
     `<div class="track-cal"><svg width="${Wd}" height="${7 * (cs + gap) + 16}" viewBox="0 0 ${Wd} ${7 * (cs + gap) + 16}">${mlabels}${cells}</svg></div>` +
-    `<p class="cap">Live so far: my demand-weighted error <b>${pct(mine, 2)}</b> vs official <b>${pct(off, 2)}</b>, closer on <b>${dayWins} of ${days.length}</b> days. ` +
+    `<p class="cap">Live so far: my demand-weighted error <b>${pct(mine, 2)}</b> vs official <b>${pct(off, 2)}</b>, closer on <b>${dayWins} of ${days.length}</b> day${days.length > 1 ? "s" : ""}. ` +
     `In the backtest it was ${pct(h.load_weighted_mape_ours, 2)} vs ${pct(h.load_weighted_mape_official, 2)}; if the live numbers stay close to that, the backtest held up.</p></div>`;
 }
 export function bindCalendar(el, days) {

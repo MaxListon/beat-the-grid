@@ -1,8 +1,8 @@
 /* When the model wins: by hour, by month, on peak days; the peak contest; the blend; the worst days. */
-import { st } from "./state.js?v=1769863934";
-import { $, $$, MINUS, VERDICT, css, fail, fd, hideTip, pct, row, showTip } from "./util.js?v=1769863934";
-import { lineChart } from "./charts.js?v=1769863934";
-import { observeReveal } from "./main.js?v=1769863934";
+import { st } from "./state.js?v=3f8233ccc6";
+import { $, $$, MINUS, VERDICT, css, fail, fd, hideTip, pct, row, showTip } from "./util.js?v=3f8233ccc6";
+import { lineChart } from "./charts.js?v=3f8233ccc6";
+import { observeReveal } from "./main.js?v=3f8233ccc6";
 
 /* ---------- when we win ---------- */
 export function renderWhen() {
