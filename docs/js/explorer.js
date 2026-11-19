@@ -1,8 +1,8 @@
 /* The explorer: one region hour by hour, comparisons, shareable views, 'Find your grid' and the live forecast card. */
-import { st } from "./state.js?v=f618dea0d4";
-import { $, $$, MINUS, css, fail, gw, pct, reduceMotion, relDay, storeGet, storeSet } from "./util.js?v=f618dea0d4";
-import { drawSeries, expand, lastDays, legendHTML, loadSeries, statsHTML } from "./charts.js?v=f618dea0d4";
-import { GAME_LIST, game, newGame } from "./game.js?v=f618dea0d4";
+import { st } from "./state.js?v=1769863934";
+import { $, $$, MINUS, css, fail, gw, pct, reduceMotion, relDay, storeGet, storeSet } from "./util.js?v=1769863934";
+import { drawSeries, expand, lastDays, legendHTML, loadSeries, statsHTML } from "./charts.js?v=1769863934";
+import { GAME_LIST, game, newGame } from "./game.js?v=1769863934";
 
 /* ---------- explorer ---------- */
 export function select(ba) {

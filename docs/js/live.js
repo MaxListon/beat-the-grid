@@ -1,7 +1,7 @@
 /* The live record: track-record calendar, live versus backtest, weekly summary, region table and voided forecasts. */
-import { st } from "./state.js?v=f618dea0d4";
-import { $, css, fd, hideTip, pct, row, showTip } from "./util.js?v=f618dea0d4";
-import { goExplore } from "./regions.js?v=f618dea0d4";
+import { st } from "./state.js?v=1769863934";
+import { $, css, fd, hideTip, pct, row, showTip } from "./util.js?v=1769863934";
+import { goExplore } from "./regions.js?v=1769863934";
 
 /* ---------- live ---------- */
 export function voidNote(L) {
@@ -20,9 +20,13 @@ export function renderLive() {
     `<div class="tile"><b>${L.days || 0}</b><span>days scored so far</span></div>` +
     `<div class="tile"><b>${L.start_date ? fd(L.start_date, false) : "–"}</b><span>first scored day</span></div></div>`;
   if (!L.days) { el.innerHTML = head + `<p class="cap">Scores appear once EIA has reported the whole day, usually about two days later.</p>` + voidNote(L); return; }
-  const rows = L.regions.slice().sort((a, b) => (b.mape_official - b.mape_ours) - (a.mape_official - a.mape_ours));
+  // Same contest as the backtest headline: regions whose official data is unreliable are listed, not counted
+  const suspect = new Set(st.LB.filter((d) => d.suspect_official).map((d) => d.ba));
+  const rows = L.regions.filter((r) => !suspect.has(r.ba)).sort((a, b) => (b.mape_official - b.mape_ours) - (a.mape_official - a.mape_ours));
+  const left = L.regions.filter((r) => suspect.has(r.ba)).map((r) => (st.LB.find((x) => x.ba === r.ba) || {}).name || r.ba);
   const won = rows.filter((r) => r.mape_ours < r.mape_official).length;
-  el.innerHTML = head + weekHTML(L.week) + calendarHTML(L.by_day || []) + (L.expect && (L.by_day || []).length ? `<div class="expect" id="expectChart"></div>` : "") + `<p class="cap">So far my error is lower in <b>${won} of ${rows.length}</b> regions over ${L.days} live day${L.days > 1 ? "s" : ""}. With only a few weeks of data these numbers are noisy; the backtest is the stronger evidence until the live record grows.</p>` +
+  el.innerHTML = head + weekHTML(L.week) + calendarHTML(L.by_day || []) + (L.expect && (L.by_day || []).length ? `<div class="expect" id="expectChart"></div>` : "") + `<p class="cap">So far my error is lower in <b>${won} of ${rows.length}</b> regions over ${L.days} live day${L.days > 1 ? "s" : ""}. With only a few weeks of data these numbers are noisy; the backtest is the stronger evidence until the live record grows.` +
+    (left.length ? ` ${left.length > 1 ? left.slice(0, -1).join(", ") + " and " + left[left.length - 1] : left[0]} ${left.length > 1 ? "are" : "is"} left out, as in the backtest, because ${left.length > 1 ? "their" : "its"} official forecast data is unreliable.` : "") + `</p>` +
     `<div class="table-wrap"><table class="lb live-lb" id="liveTable"><thead><tr><th>Region</th><th class="num">Days</th><th class="num">My error</th><th class="num">Official</th><th class="num">Days I was closer</th></tr></thead><tbody>` +
     rows.map((r, i) => { const meta = st.LB.find((x) => x.ba === r.ba) || {}; return `<tr data-ba="${r.ba}" tabindex="0"${i >= 10 ? ' class="extra"' : ""}><td class="reg"><b>${meta.name || r.ba}</b><span>${r.ba}</span></td><td class="num" data-label="Days">${r.days}</td><td class="num" data-label="My error">${pct(r.mape_ours, 2)}</td><td class="num" data-label="Official">${pct(r.mape_official, 2)}</td><td class="num" data-label="Days closer">${r.days_won} of ${r.days}</td></tr>`; }).join("") +
     `</tbody></table></div>` +

@@ -67,6 +67,17 @@ def test_scoring_waits_for_a_fully_reported_day(isolated):
     assert 0 <= s.iloc[0].mape_ours < 1
 
 
+def test_hours_eia_filled_in_with_the_official_forecast_are_not_scored(isolated):
+    """EIA fills a missing demand report with the operator's forecast; scoring that would hand the operator a perfect day."""
+    eia, wx = synthetic("CISO", days=60)
+    eia = eia.assign(demand_raw=eia.demand)
+    live.issue(pd.Timestamp("2025-02-20").date(), eia, wx, now=pd.Timestamp("2025-02-19 12:05", tz="UTC"))
+    day = (eia.ts > pd.Timestamp("2025-02-20 08:00", tz="UTC")) & (eia.ts <= pd.Timestamp("2025-02-21 08:00", tz="UTC"))
+    filled = eia.assign(demand=eia.demand.where(~day, eia.official_fc), demand_raw=eia.demand_raw.where(~day))
+    assert live.score(filled).empty                 # not reported yet: wait, don't score the copy
+    assert live.score(eia).iloc[0].mape_official > 0
+
+
 def test_live_weather_reaches_back_past_a_week():
     from grid.weather import LIVE_PAST_DAYS
     assert LIVE_PAST_DAYS >= 9   # temp_minus_lag7d for tomorrow needs weather from 8 days before today

@@ -15,6 +15,10 @@ BASE = "/beat-the-grid/"
 SITE = "https://maxliston.github.io/beat-the-grid/"
 
 CHANGELOG = [
+    ("live", "2026-11-19", [
+        "First live day scored (2026-11-17).",
+        "Scoring fix: when an operator hasn't reported an hour yet, EIA fills the gap with that operator's own day-ahead forecast. NYIS and SCEG had no reported hours on 2026-11-17, so their official forecasts were scored as perfect (0.00% error). Now only reported hours count, and a region's day is scored once at least 23 of its hours are reported. NYIS, SCEG and ISNE (2 missing hours) wait for EIA. In the backtest only 0.11% of hours were filled this way, too few to change its results. Before the fix, 2026-11-17 read 3.38% for my model vs 3.33% official; after it, 3.19% vs 3.45%.",
+    ]),
     ("site", "2026-11-17", [
         "The live record now shows at the top of the page: forecasts published and, once days are scored, how often the model was closer than the operators.",
     ]),

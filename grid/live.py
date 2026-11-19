@@ -125,8 +125,15 @@ def explain(models: dict, f: pd.DataFrame, p: pd.DataFrame) -> dict:
 
 
 def score(eia: pd.DataFrame) -> pd.DataFrame:
-    """Daily live score per region for every forecast file whose day is fully reported."""
+    """Daily live score per region for every forecast file whose day is fully reported.
+
+    Only hours with a value the operator actually reported count. When a report is missing, EIA's
+    adjusted demand fills the gap with the operator's own day-ahead forecast, which would score the
+    official forecast as perfect (NYIS and SCEG on 2026-11-17). Such a day waits until it's reported.
+    """
     eia = eia[~eia.get("from_rt", False)] if "from_rt" in eia else eia
+    if "demand_raw" in eia:
+        eia = eia[eia.demand_raw.notna()]
     actual = eia.assign(ts_utc=eia.ts.dt.strftime("%Y-%m-%dT%H:%MZ"))[["ba", "ts_utc", "demand", "official_fc"]]
     out = []
     for f in live_files(FORECASTS):
