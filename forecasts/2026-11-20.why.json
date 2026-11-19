@@ -1,0 +1,515 @@
+{
+ "target": "2026-11-20",
+ "regions": {
+  "PJM": {
+   "avg_mw": 91688.34917862697,
+   "peak_mw": 104789.61883408076,
+   "peak_hour": 7,
+   "last_week_avg_mw": 93465.43452380953,
+   "vs_last_week": -0.019013289289634194,
+   "max_temp_c": 19.428570883614675,
+   "temp_vs_last_week_c": 5.370238060752551,
+   "drivers": {
+    "Weather": -0.050845938070821196,
+    "Season": 0.011929009894906176,
+    "Recent demand trend": 0.0117948730000228,
+    "Day of week & holidays": 6.418939817631822e-05
+   }
+  },
+  "MISO": {
+   "avg_mw": 71403.81894909173,
+   "peak_mw": 76312.57752743736,
+   "peak_hour": 7,
+   "last_week_avg_mw": 71849.44047619047,
+   "vs_last_week": -0.006202157235259409,
+   "max_temp_c": 17.09444470758791,
+   "temp_vs_last_week_c": 8.058912025235685,
+   "drivers": {
+    "Weather": -0.04873033693158113,
+    "Recent demand trend": 0.02006565733836813,
+    "Season": 0.015570043229546438,
+    "Day of week & holidays": -0.0015932530161578973
+   }
+  },
+  "ERCO": {
+   "avg_mw": 49767.52737858385,
+   "peak_mw": 52937.649955482004,
+   "peak_hour": 16,
+   "last_week_avg_mw": 49462.67857142857,
+   "vs_last_week": 0.006163208624358152,
+   "max_temp_c": 22.57921322811855,
+   "temp_vs_last_week_c": 0.163132098953376,
+   "drivers": {
+    "Weather": -0.051002589137338926,
+    "Season": 0.04037189815813055,
+    "Recent demand trend": 0.017847250529402503,
+    "Day of week & holidays": 0.002038333117968989
+   }
+  },
+  "SWPP": {
+   "avg_mw": 31540.729537301904,
+   "peak_mw": 33236.883417521094,
+   "peak_hour": 7,
+   "last_week_avg_mw": 32145.27380952381,
+   "vs_last_week": -0.01880663004471883,
+   "max_temp_c": 20.408695138019066,
+   "temp_vs_last_week_c": 9.334420231508389,
+   "drivers": {
+    "Weather": -0.06254198782786102,
+    "Season": 0.023057511624922273,
+    "Recent demand trend": 0.014885545513786014,
+    "Day of week & holidays": 0.0006054012393592449
+   }
+  },
+  "SOCO": {
+   "avg_mw": 23387.845711948572,
+   "peak_mw": 25285.41455587569,
+   "peak_hour": 18,
+   "last_week_avg_mw": 25024.095238095237,
+   "vs_last_week": -0.06538696047063208,
+   "max_temp_c": 21.76493466364873,
+   "temp_vs_last_week_c": 7.693127703357052,
+   "drivers": {
+    "Weather": -0.07990638777984826,
+    "Season": 0.024561538695334145,
+    "Recent demand trend": -0.007511229549262929,
+    "Day of week & holidays": -0.00022877060904845622
+   }
+  },
+  "CISO": {
+   "avg_mw": 26345.253016756644,
+   "peak_mw": 29629.358749675594,
+   "peak_hour": 8,
+   "last_week_avg_mw": 24777.26785714286,
+   "vs_last_week": 0.0632832146245601,
+   "max_temp_c": 15.303268033694597,
+   "temp_vs_last_week_c": -4.6099128863390755,
+   "drivers": {
+    "Recent demand trend": 0.059980395581362256,
+    "Weather": -0.024864100424206042,
+    "Season": 0.01896510755799158,
+    "Day of week & holidays": 0.0021220684127006366
+   }
+  },
+  "TVA": {
+   "avg_mw": 17707.132904124977,
+   "peak_mw": 20707.358515988428,
+   "peak_hour": 7,
+   "last_week_avg_mw": 18427.291666666668,
+   "vs_last_week": -0.0390810964285323,
+   "max_temp_c": 22.366666521344865,
+   "temp_vs_last_week_c": 7.275396782727468,
+   "drivers": {
+    "Weather": -0.06735645845532857,
+    "Season": 0.017042056133042643,
+    "Recent demand trend": 0.004436337161168143,
+    "Day of week & holidays": -0.0025512386745038603
+   }
+  },
+  "NYIS": {
+   "avg_mw": 15609.973215045908,
+   "peak_mw": 17676.687174157538,
+   "peak_hour": 18,
+   "last_week_avg_mw": 15829.541666666666,
+   "vs_last_week": -0.013870802847256058,
+   "max_temp_c": 18.0669354315727,
+   "temp_vs_last_week_c": 5.221303742899689,
+   "drivers": {
+    "Weather": -0.05207618771693582,
+    "Season": 0.023758485196440342,
+    "Day of week & holidays": -0.0008003408807544793,
+    "Recent demand trend": 0.0003997133148076453
+   }
+  },
+  "FPL": {
+   "avg_mw": 14370.089737575885,
+   "peak_mw": 16391.65597860453,
+   "peak_hour": 14,
+   "last_week_avg_mw": 13851.67857142857,
+   "vs_last_week": 0.03742587322352575,
+   "max_temp_c": 23.57049216598761,
+   "temp_vs_last_week_c": 0.7165982736264418,
+   "drivers": {
+    "Season": 0.04502199115880883,
+    "Weather": -0.017909891239534997,
+    "Recent demand trend": 0.014670249537675517,
+    "Day of week & holidays": 0.0029383661726699907
+   }
+  },
+  "ISNE": {
+   "avg_mw": 12298.697766454117,
+   "peak_mw": 14360.219929433579,
+   "peak_hour": 17,
+   "last_week_avg_mw": 12677.345238095239,
+   "vs_last_week": -0.029868041339072393,
+   "max_temp_c": 17.87402601365919,
+   "temp_vs_last_week_c": 5.189610374631819,
+   "drivers": {
+    "Weather": -0.05251864325164,
+    "Season": 0.013661493111494475,
+    "Recent demand trend": -0.005489260761278521,
+    "Day of week & holidays": -0.0022943487426432753
+   }
+  },
+  "DUK": {
+   "avg_mw": 11978.78096872036,
+   "peak_mw": 14873.240897265336,
+   "peak_hour": 7,
+   "last_week_avg_mw": 12200.05357142857,
+   "vs_last_week": -0.018137018941163485,
+   "max_temp_c": 21.004545081745494,
+   "temp_vs_last_week_c": 3.0909090629129694,
+   "drivers": {
+    "Weather": -0.04876135065156747,
+    "Season": 0.011875016675337432,
+    "Day of week & holidays": 0.0013360756267739714,
+    "Recent demand trend": -0.00028674271963568377
+   }
+  },
+  "CPLE": {
+   "avg_mw": 6549.106799752825,
+   "peak_mw": 8427.95532344974,
+   "peak_hour": 7,
+   "last_week_avg_mw": 6666.494047619048,
+   "vs_last_week": -0.017608543115424702,
+   "max_temp_c": 20.828571137927824,
+   "temp_vs_last_week_c": 1.3390872970459953,
+   "drivers": {
+    "Weather": -0.05385209017797571,
+    "Season": 0.02924536114623334,
+    "Recent demand trend": -0.0105813797205055,
+    "Day of week & holidays": 0.0022927186607621373
+   }
+  },
+  "BPAT": {
+   "avg_mw": 8199.514500443276,
+   "peak_mw": 9245.04888555539,
+   "peak_hour": 8,
+   "last_week_avg_mw": 7324.5952380952385,
+   "vs_last_week": 0.11944950320224934,
+   "max_temp_c": 8.771428675878614,
+   "temp_vs_last_week_c": -4.94999996863956,
+   "drivers": {
+    "Weather": 0.06096333116102748,
+    "Recent demand trend": 0.05782697845065345,
+    "Season": -0.002010026102343148,
+    "Day of week & holidays": 0.0017107524648492887
+   }
+  },
+  "FPC": {
+   "avg_mw": 5435.1892527140435,
+   "peak_mw": 6287.420497331191,
+   "peak_hour": 18,
+   "last_week_avg_mw": 5197.160714285715,
+   "vs_last_week": 0.04579972633404372,
+   "max_temp_c": 23.11999969482422,
+   "temp_vs_last_week_c": 0.9033332824707029,
+   "drivers": {
+    "Season": 0.06185254164879761,
+    "Weather": -0.03889456997243169,
+    "Recent demand trend": 0.009685690147440819,
+    "Day of week & holidays": 0.0026095340037005257
+   }
+  },
+  "PACE": {
+   "avg_mw": 6109.720066824011,
+   "peak_mw": 6618.561781336584,
+   "peak_hour": 11,
+   "last_week_avg_mw": 5693.238095238095,
+   "vs_last_week": 0.07315379483852391,
+   "max_temp_c": 4.450000047683716,
+   "temp_vs_last_week_c": -8.66770830626289,
+   "drivers": {
+    "Weather": 0.053339450068940815,
+    "Recent demand trend": 0.03451991923755656,
+    "Season": 0.01314598911354336,
+    "Day of week & holidays": 0.0026596102250244905
+   }
+  },
+  "PSCO": {
+   "avg_mw": 4915.186300756212,
+   "peak_mw": 5482.491994000254,
+   "peak_hour": 17,
+   "last_week_avg_mw": 4833.982142857143,
+   "vs_last_week": 0.016798605269789713,
+   "max_temp_c": 15.585074965633563,
+   "temp_vs_last_week_c": 0.17412926156574246,
+   "drivers": {
+    "Recent demand trend": 0.023410043852627776,
+    "Weather": -0.02251157350542679,
+    "Season": 0.021602224406145416,
+    "Day of week & holidays": 0.0006559239232114498
+   }
+  },
+  "NEVP": {
+   "avg_mw": 4480.730284994982,
+   "peak_mw": 4857.860788216165,
+   "peak_hour": 18,
+   "last_week_avg_mw": 4248.523809523809,
+   "vs_last_week": 0.054655801845959084,
+   "max_temp_c": 14.899999618530273,
+   "temp_vs_last_week_c": -7.362500001986821,
+   "drivers": {
+    "Season": 0.037972860667299956,
+    "Recent demand trend": 0.037084239468920456,
+    "Weather": 0.008076209836559286,
+    "Day of week & holidays": 0.0007990537943939956
+   }
+  },
+  "LGEE": {
+   "avg_mw": 3985.7547095364084,
+   "peak_mw": 4713.995406820803,
+   "peak_hour": 8,
+   "last_week_avg_mw": 4107.041666666667,
+   "vs_last_week": -0.0295314649750551,
+   "max_temp_c": 18.533333778381348,
+   "temp_vs_last_week_c": 5.556944453605898,
+   "drivers": {
+    "Weather": -0.06371795257179569,
+    "Season": 0.018113789364587633,
+    "Recent demand trend": 0.010161909271059867,
+    "Day of week & holidays": -0.0017848534760863423
+   }
+  },
+  "AZPS": {
+   "avg_mw": 4142.963187682372,
+   "peak_mw": 4882.95804779527,
+   "peak_hour": 6,
+   "last_week_avg_mw": 4019.059523809524,
+   "vs_last_week": 0.030829019361077847,
+   "max_temp_c": 18.81621624972369,
+   "temp_vs_last_week_c": -5.085698084100276,
+   "drivers": {
+    "Season": 0.04114363700227253,
+    "Recent demand trend": 0.022878884538418586,
+    "Weather": -0.01703906723233169,
+    "Day of week & holidays": -0.002004033519390132
+   }
+  },
+  "SRP": {
+   "avg_mw": 3307.511681828963,
+   "peak_mw": 3806.7592564270285,
+   "peak_hour": 19,
+   "last_week_avg_mw": 3197.0178571428573,
+   "vs_last_week": 0.034561528781967166,
+   "max_temp_c": 19.399999618530273,
+   "temp_vs_last_week_c": -3.96666689713796,
+   "drivers": {
+    "Season": 0.05345858660277236,
+    "Recent demand trend": 0.04039626160910459,
+    "Weather": -0.030742518917218534,
+    "Day of week & holidays": -0.0026742582514255493
+   }
+  },
+  "SC": {
+   "avg_mw": 2846.632131656188,
+   "peak_mw": 3106.937394929994,
+   "peak_hour": 18,
+   "last_week_avg_mw": 3136.8928571428573,
+   "vs_last_week": -0.09253128452434445,
+   "max_temp_c": 22.11999931335449,
+   "temp_vs_last_week_c": 4.438749794165293,
+   "drivers": {
+    "Weather": -0.08109779201441862,
+    "Recent demand trend": -0.02677894417736398,
+    "Season": 0.005255295474530534,
+    "Day of week & holidays": 0.001634289978251
+   }
+  },
+  "SCEG": {
+   "avg_mw": 2346.9876172574345,
+   "peak_mw": 2593.792576832184,
+   "peak_hour": 10,
+   "last_week_avg_mw": 2575.415566580636,
+   "vs_last_week": -0.08869556909081044,
+   "max_temp_c": 22.2428572518485,
+   "temp_vs_last_week_c": 4.332738081614177,
+   "drivers": {
+    "Weather": -0.07830921478633159,
+    "Recent demand trend": -0.04721480312029141,
+    "Season": 0.02782933219509473,
+    "Day of week & holidays": -0.001543667525313322
+   }
+  },
+  "PSEI": {
+   "avg_mw": 3329.53924936001,
+   "peak_mw": 3722.3996514112096,
+   "peak_hour": 8,
+   "last_week_avg_mw": 2897.5119047619046,
+   "vs_last_week": 0.14910287129039634,
+   "max_temp_c": 10.026666895548503,
+   "temp_vs_last_week_c": -5.7680555161502625,
+   "drivers": {
+    "Weather": 0.06898634020734319,
+    "Recent demand trend": 0.06507054464662931,
+    "Day of week & holidays": 0.0027057377373104316,
+    "Season": 0.0005063018775102139
+   }
+  },
+  "LDWP": {
+   "avg_mw": 2495.5394495200494,
+   "peak_mw": 2783.5951707563686,
+   "peak_hour": 17,
+   "last_week_avg_mw": 2147.595238095238,
+   "vs_last_week": 0.16201573054958573,
+   "max_temp_c": 16.412500143051147,
+   "temp_vs_last_week_c": -4.875520966947079,
+   "drivers": {
+    "Season": 0.11462775809000585,
+    "Recent demand trend": 0.023293246303650306,
+    "Weather": -0.015090705720953728,
+    "Day of week & holidays": 0.0009805602951733223
+   }
+  },
+  "PGE": {
+   "avg_mw": 2964.3843045417816,
+   "peak_mw": 3283.3773658290643,
+   "peak_hour": 8,
+   "last_week_avg_mw": 2717.2976190476193,
+   "vs_last_week": 0.09093103521754209,
+   "max_temp_c": 9.692307985745943,
+   "temp_vs_last_week_c": -5.0144229756715974,
+   "drivers": {
+    "Recent demand trend": 0.05281548821763347,
+    "Weather": 0.037352024082928925,
+    "Season": 0.005666455845060127,
+    "Day of week & holidays": 0.0010893198914031612
+   }
+  },
+  "TEC": {
+   "avg_mw": 2135.692835411231,
+   "peak_mw": 2480.8850619343516,
+   "peak_hour": 18,
+   "last_week_avg_mw": 1998.2380952380952,
+   "vs_last_week": 0.06878796901164952,
+   "max_temp_c": 23.200000762939453,
+   "temp_vs_last_week_c": 1.516666571299235,
+   "drivers": {
+    "Season": 0.05746012531603123,
+    "Recent demand trend": 0.027549635454294397,
+    "Weather": -0.0251072005361786,
+    "Day of week & holidays": 0.002399527159800378
+   }
+  },
+  "AECI": {
+   "avg_mw": 2005.173411424079,
+   "peak_mw": 2243.93972614606,
+   "peak_hour": 7,
+   "last_week_avg_mw": 2389.2678571428573,
+   "vs_last_week": -0.1607582191216047,
+   "max_temp_c": 21.266666412353516,
+   "temp_vs_last_week_c": 12.118055563316576,
+   "drivers": {
+    "Weather": -0.09916889025599551,
+    "Recent demand trend": -0.04500103040604884,
+    "Season": 0.011158775248020857,
+    "Day of week & holidays": -0.0021907934451583654
+   }
+  },
+  "PACW": {
+   "avg_mw": 2782.428766137114,
+   "peak_mw": 3198.28770133888,
+   "peak_hour": 7,
+   "last_week_avg_mw": 2440.464285714286,
+   "vs_last_week": 0.14012271452796154,
+   "max_temp_c": 9.62727303938432,
+   "temp_vs_last_week_c": -4.964772652947541,
+   "drivers": {
+    "Recent demand trend": 0.0699409306274901,
+    "Weather": 0.05817606716244853,
+    "Day of week & holidays": 0.0023740235498736517,
+    "Season": 0.0005512368053005259
+   }
+  },
+  "FMPP": {
+   "avg_mw": 1718.1687883913958,
+   "peak_mw": 2004.9265030331806,
+   "peak_hour": 13,
+   "last_week_avg_mw": 1639.6964285714287,
+   "vs_last_week": 0.047857858596627834,
+   "max_temp_c": 23.00769277719351,
+   "temp_vs_last_week_c": 1.3548075877703154,
+   "drivers": {
+    "Season": 0.06781506527022561,
+    "Weather": -0.02984444034715703,
+    "Day of week & holidays": 0.0005563495927239792,
+    "Recent demand trend": 4.550704901670003e-05
+   }
+  },
+  "IPCO": {
+   "avg_mw": 2097.108228055934,
+   "peak_mw": 2255.5878252995876,
+   "peak_hour": 8,
+   "last_week_avg_mw": 1901.6964285714287,
+   "vs_last_week": 0.10275656858192672,
+   "max_temp_c": 4.966666579246521,
+   "temp_vs_last_week_c": -12.922916710583701,
+   "drivers": {
+    "Weather": 0.06636171333973652,
+    "Recent demand trend": 0.05014571350725239,
+    "Season": 0.022735117119423044,
+    "Day of week & holidays": 0.0018604714978463289
+   }
+  },
+  "BANC": {
+   "avg_mw": 1978.379983502368,
+   "peak_mw": 2165.968378427095,
+   "peak_hour": 17,
+   "last_week_avg_mw": 1783.875,
+   "vs_last_week": 0.10903509691114466,
+   "max_temp_c": 10.372726960615678,
+   "temp_vs_last_week_c": -5.971591037331206,
+   "drivers": {
+    "Recent demand trend": 0.0747456836577565,
+    "Season": 0.028834041148606198,
+    "Weather": 0.01845213268847931,
+    "Day of week & holidays": 0.00427065741048693
+   }
+  },
+  "PNM": {
+   "avg_mw": 1612.9429271208712,
+   "peak_mw": 1764.54717536489,
+   "peak_hour": 6,
+   "last_week_avg_mw": 1611.1369047619048,
+   "vs_last_week": 0.0011209614487934783,
+   "max_temp_c": 16.450000603993736,
+   "temp_vs_last_week_c": 0.2673610378470686,
+   "drivers": {
+    "Weather": -0.028642691267436182,
+    "Recent demand trend": 0.020981625851153703,
+    "Season": 0.013426324280871607,
+    "Day of week & holidays": 0.0011047989166042894
+   }
+  },
+  "TEPC": {
+   "avg_mw": 1437.6702192643013,
+   "peak_mw": 1652.805035411178,
+   "peak_hour": 7,
+   "last_week_avg_mw": 1390.3580968947638,
+   "vs_last_week": 0.03402873150104613,
+   "max_temp_c": 20.399999618530273,
+   "temp_vs_last_week_c": -1.8541667064030964,
+   "drivers": {
+    "Season": 0.05073737272548843,
+    "Weather": -0.026655885321754513,
+    "Recent demand trend": 0.021170280687845894,
+    "Day of week & holidays": -0.0008554075355113085
+   }
+  },
+  "JEA": {
+   "avg_mw": 1269.0510098184004,
+   "peak_mw": 1433.9920104063942,
+   "peak_hour": 18,
+   "last_week_avg_mw": 1265.3630952380952,
+   "vs_last_week": 0.0029145109369665967,
+   "max_temp_c": 21.0,
+   "temp_vs_last_week_c": 3.1916667222976685,
+   "drivers": {
+    "Season": 0.049110960144602256,
+    "Weather": -0.048338794031935965,
+    "Recent demand trend": -0.007999575647180882,
+    "Day of week & holidays": 0.0027103466512928645
+   }
+  }
+ }
+}
